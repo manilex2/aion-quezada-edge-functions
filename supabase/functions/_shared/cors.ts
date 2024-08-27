@@ -1,5 +1,5 @@
 // Define los dominios permitidos como expresiones regulares
-const allowedOrigins = [/aion-juridico-quezada\.flutterflow\.app$/, /app\.flutterflow\.io\/debug$/];
+const allowedOrigins = [/aion-juridico\.flutterflow\.app$/, /app\.flutterflow\.io\/debug$/];
 
 // Tipo de índice para los headers CORS
 type CorsHeaders = {

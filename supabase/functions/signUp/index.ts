@@ -60,15 +60,43 @@ app.use((req, res, next) => {
 
 app.post('/signUp', async (req: express.Request, res: express.Response) => {  
   try {
+    let supabase;
+
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+      console.log("ENTORNO: PRODUCCIÓN");
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.replace('Bearer ', '');
+      if (!token) {
+        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+      }
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+    } else {
+      console.log("ENTORNO: DESARROLLO");
+      supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }}
+      )
+    }
     const body = req.body;
     const saltRounds = 10;
-    const clave = genSaltSync(saltRounds);
-    const supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_KEY")!);
+    let clave = genSaltSync(saltRounds);
+    
+    if (clave.endsWith('.')) {
+      clave = clave.slice(0, -1);
+    }
 
     const { data: userRegister, error: userRegisterError } = await supabase.from("users").select().eq("email", body.email).limit(1).single();
     if (userRegister) {
       console.error(userRegisterError);
-      throw "El usuario ya se encuentra registrado";
+      throw "CONFLICT: El usuario ya se encuentra registrado";
     }
 
     const { data: user, error: userError } = await supabase.auth.signUp({
@@ -77,12 +105,12 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
     });
     if (userError) {
       console.error(userError);
-      throw userError;
+      throw `UNAUTHORIZED: ${userError}`;
     } else {
       console.log("Usuario creado con éxito: ", user.user?.id)
     }
 
-    const { data: institution, error: institutionError } = await supabase.from("institution").select().eq("id", body.institution_id).limit(1).single();
+    const { data: institution, error: institutionError } = await supabase.from("institution").select().eq("id", body.institucion_id).limit(1).single();
     if (institutionError) {
       console.error(institutionError);
       throw institutionError;
@@ -101,8 +129,8 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
       seleccion_temp: null
     };
 
-    if (body.department_id) {
-      const { data: department, error: departmentError } = await supabase.from("departments").select().limit(1).single();
+    if (body.departamento_id) {
+      const { data: department, error: departmentError } = await supabase.from("departments").select().eq("id", body.departamento_id).limit(1).single();
       if (departmentError) {
         console.error(departmentError);
         throw departmentError;
@@ -110,18 +138,30 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
       departmentData = department;
     }
 
+    const { data: registerUser, error: registerUserError } = await supabase.from("users").select().eq("id", body.registrado_por_id).limit(1).single();
+    if (registerUserError) {
+      console.error(registerUserError);
+      throw registerUserError;
+    };
+
     const { error: userDBError } = await supabase.from("users").insert({
       id: `${user.user?.id}`,
       email: `${user.user?.email}`,
       first_login: true,
-      seleccion_temp: false,
       institution_id: institution.id,
-      display_name: body.display_name,
-      enable: true,
-      rol_name: body.rol,
-      department_id: body.department_id? departmentData.id : null,
-      phone_number: body.phone_number? body.phone_number : null,
-      photo_url: body.photo_url? body.photo_url : null
+      names: body.nombres?? "N/D",
+      surnames: body.apellidos ?? "N/D",
+      enable: body.habilitado ?? true,
+      rol_name: body.rol?? "N/D",
+      department_id: body.departamento_id? departmentData.id : null,
+      phone_number: body.numero_telefono ?? "N/D",
+      photo_url: body.url_foto_perfil ?? null,
+      register_by_email: body.registrado_por_email ?? "N/D",
+      title: body.titulo ?? "N/D",
+      hourly_rates: body.honorarios_por_hora ?? true,
+      hour_value: body.valor_hora ?? 0,
+      category: body.categoria ?? "N/D",
+      register_by_id: registerUser.id
     });
     if (userDBError) {
       console.error(userDBError);
@@ -164,9 +204,25 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
     }
 
     console.log("OK");
-    res.status(201).send(JSON.stringify({ response: { status: 200, message: "Usuario creado correctamente." }}));
+    res.status(201).json({ message: "Usuario creado correctamente." });
   } catch (error) {
-    res.status(403).send(JSON.stringify({ response: { status: 403, message: `Ocurrió el siguiente error: ${error}` }}));
+    if (typeof error === "string") {
+      if (error.startsWith("BAD REQUEST")) {
+        res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
+      } else if (error.startsWith("UNAUTHORIZED")) {
+        res.status(401).json({ message: `Ocurrió el siguiente error de autorización: ${error}` });
+      } else if (error.startsWith("FORBIDDEN")) {
+        res.status(403).json({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
+      } else if (error.startsWith("NOT FOUND")) {
+        res.status(404).json({ message: `Ocurrió el siguiente error de localización: ${error}` });
+      } else if (error.startsWith("CONFLICT")) {
+        res.status(409).json({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
+      } else {
+        res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+      }
+    } else {
+      res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+    }
   }
 })
 

@@ -4,6 +4,12 @@ import morgan from "npm:morgan@1.10.0";
 // @deno-types="npm:@types/express";
 import express from "npm:express@4.18.3";
 
+import {
+  genSaltSync,
+} from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+
+import nodemailer from "npm:nodemailer@6.9.14";
+
 import { config } from "npm:dotenv@16.4.5";
 import process from "node:process";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
@@ -39,9 +45,10 @@ app.use((req, res, next) => {
 });
 
 
-app.put('/changePassword', async (req: express.Request, res: express.Response) => {
+app.put('/forgotPassword', async (req: express.Request, res: express.Response) => {    
   try {
     let supabase;
+
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
       console.log("ENTORNO: PRODUCCIÓN");
       const authHeader = req.headers.authorization || "";
@@ -70,37 +77,78 @@ app.put('/changePassword', async (req: express.Request, res: express.Response) =
       });
     }
 
-    if (!req.body.password) {
-      throw "BAD REQUEST: No se proporcionó una contraseña";
-    } else if(!req.body.email) {
-      throw "BAD REQUEST: No se proporcionó un email";
-    }
-
     const body = req.body;
-
-    const { error: errorLogged } = await supabase.auth.signInWithPassword({
-      email: body.email,
-      password: body.old_password,
-    });
-    if (errorLogged) {
-      throw "UNAUTHORIZED: La contraseña anterior o email no es correcto";
+    const saltRounds = 10;
+    let clave = genSaltSync(saltRounds);
+    
+    if (clave.endsWith('.')) {
+      clave = clave.slice(0, -1);
     }
 
-    const { error: userRegisterError } = await supabase.from("users").select().eq('email', body.email).limit(1).single();
-    if (userRegisterError) {
+    const { data: userRegister, error: userRegisterError } = await supabase.from("users").select().eq("email", body.email).limit(1).single();
+    if (!userRegister) {
       console.error(userRegisterError);
       throw "NOT FOUND: El usuario no se encuentra registrado";
     }
 
-    const { error: userError } = await supabase.auth.updateUser({
-      password: body.password,
-    });
+    const { data: user, error: userError } = await supabase.auth.admin.updateUserById(
+      userRegister.id,
+      { password: clave }
+    );
     if (userError) {
       console.error(userError);
-      throw userError;
+      throw `UNAUTHORIZED: ${userError}`;
+    } else {
+      console.log("Contraseña cambiada con exito: ", user);
     }
+
+    const { error: userChangedError } = await supabase
+      .from("users")
+      .update({ first_login: true })
+      .eq('id', userRegister.id)
+
+    if (userChangedError) {
+      console.error(userChangedError);
+      throw userChangedError;
+    }
+
+    const transporter = nodemailer.createTransport({
+
+      host: Deno.env.get("SENDGRID_HOST"),
+      port: Deno.env.get("SENDGRID_PORT"),
+      auth: {
+        user: Deno.env.get("SENDGRID_USER"),
+        pass: Deno.env.get("SENDGRID_API_KEY"),
+      },
+    });
+
+    try {
+      transporter.sendMail({
+        from: `${Deno.env.get("SENDGRID_SENDER_NAME")} ${Deno.env.get("SENDGRID_SENDER_EMAIL")}`,
+        to: `${body.email}`,
+        subject: `Reestablecimiento de contraseña en ${Deno.env.get("AION_NAME")}`,
+        html: `<p>Hola ${userRegister.display_name}</p><p>Su contraseña ha sido reestablecida correctamente en ${Deno.env.get("AION_NAME")}.</p><p>Su contraseña provisional: <b>${clave}</b></p><p>Al iniciar sesión se le solicitará cambiar la contraseña.</p><p>Para ingresar a la plataforma de ${Deno.env.get("AION_NAME")} puede ingresar a través del siguiente link: <a href="${Deno.env.get("AION_URL")}">${Deno.env.get("AION_NAME")}</a></p><p>Atentamente</p><p><b>El equipo de ${Deno.env.get("AION_NAME")}</b></p>`,
+      // deno-lint-ignore no-explicit-any
+      }, (err: any, info: nodemailer.SentMessageInfo) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(info);
+        }
+      }),
+      // deno-lint-ignore no-explicit-any
+      (error: any) => {
+        if (error) {
+          console.log(error);
+          throw new Error(error);
+        }
+      };
+    } catch (error) {
+      throw new Error(error);
+    }
+
     console.log("OK");
-    res.status(200).json({ message: "Contraseña cambiada correctamente." });
+    res.status(201).json({ message: "Contraseña reestablecida correctamente." });
   } catch (error) {
     if (typeof error === "string") {
       if (error.startsWith("BAD REQUEST")) {

@@ -11,59 +11,593 @@ export type Database = {
     Tables: {
       actividades: {
         Row: {
+          activity_name: string | null
+          caso_id: string | null
+          client_id: string | null
+          close: boolean | null
           created_at: string
-          department_id: string | null
+          end_date_planned: string | null
+          end_date_real: string | null
           id: string
-          institution_id: string | null
-          name: string | null
-          proceso_id: string | null
+          register_by_email: string | null
+          register_by_id: string | null
+          responsible_id: string | null
+          start_date: string | null
+          termino: number | null
           tramite_id: string | null
         }
         Insert: {
+          activity_name?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          close?: boolean | null
           created_at?: string
-          department_id?: string | null
+          end_date_planned?: string | null
+          end_date_real?: string | null
           id?: string
-          institution_id?: string | null
-          name?: string | null
-          proceso_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          start_date?: string | null
+          termino?: number | null
           tramite_id?: string | null
         }
         Update: {
+          activity_name?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          close?: boolean | null
           created_at?: string
-          department_id?: string | null
+          end_date_planned?: string | null
+          end_date_real?: string | null
           id?: string
-          institution_id?: string | null
-          name?: string | null
-          proceso_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          start_date?: string | null
+          termino?: number | null
           tramite_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "actividades_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: "acciones__caso_id_fkey"
+            columns: ["caso_id"]
             isOneToOne: false
-            referencedRelation: "departments"
+            referencedRelation: "client_casos"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "actividades_institution_id_fkey"
-            columns: ["institution_id"]
+            foreignKeyName: "acciones_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "institution"
+            referencedRelation: "client"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "actividades_proceso_id_fkey"
-            columns: ["proceso_id"]
+            foreignKeyName: "acciones_register_by_id_fkey"
+            columns: ["register_by_id"]
             isOneToOne: false
-            referencedRelation: "procesos"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "actividades_tramite_id_fkey"
+            foreignKeyName: "acciones_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acciones_tramite_id_fkey"
             columns: ["tramite_id"]
             isOneToOne: false
-            referencedRelation: "tramites"
+            referencedRelation: "client_tramites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      actividades_avances: {
+        Row: {
+          activity_id: string | null
+          close: boolean | null
+          comment: string | null
+          created_at: string
+          end_date_planned: string | null
+          end_date_real: string | null
+          id: string
+          register_by_email: string | null
+          register_by_id: string | null
+          responsible_id: string | null
+          start_date: string | null
+          status: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          close?: boolean | null
+          comment?: string | null
+          created_at?: string
+          end_date_planned?: string | null
+          end_date_real?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          start_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          close?: boolean | null
+          comment?: string | null
+          created_at?: string
+          end_date_planned?: string | null
+          end_date_real?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          start_date?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acciones_avances_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acciones_avances_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_avances_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      actividades_avances_soportes: {
+        Row: {
+          activity_id: string | null
+          avance_id: string | null
+          caso_id: string | null
+          client_id: string | null
+          created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          register_by_email: string | null
+          register_by_id: string | null
+          tramite_id: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          avance_id?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+          tramite_id?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          avance_id?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+          tramite_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acciones_avances_soportes_avance_id_fkey"
+            columns: ["avance_id"]
+            isOneToOne: false
+            referencedRelation: "actividades_avances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acciones_avances_soportes_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acciones_avances_soportes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acciones_avances_soportes_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acciones_avances_soportes_tramite_id_fkey"
+            columns: ["tramite_id"]
+            isOneToOne: false
+            referencedRelation: "client_tramites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_avances_soportes_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caja_chica_liq_client: {
+        Row: {
+          bill_support: string | null
+          caso_id: string | null
+          client_id: string | null
+          client_liq_code: string | null
+          created_at: string
+          id: string
+          max_payment_day: string | null
+          payment_support: string | null
+          user_id_loquidator: string | null
+          value: number | null
+        }
+        Insert: {
+          bill_support?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          client_liq_code?: string | null
+          created_at?: string
+          id?: string
+          max_payment_day?: string | null
+          payment_support?: string | null
+          user_id_loquidator?: string | null
+          value?: number | null
+        }
+        Update: {
+          bill_support?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          client_liq_code?: string | null
+          created_at?: string
+          id?: string
+          max_payment_day?: string | null
+          payment_support?: string | null
+          user_id_loquidator?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liquidation_client_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liquidation_client_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liquidation_client_user_id_loquidator_fkey"
+            columns: ["user_id_loquidator"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caja_chica_liq_internal: {
+        Row: {
+          created_at: string
+          final_balance: number | null
+          id: string
+          initial_balance: number | null
+          int_liq_code: string | null
+          liquidation_value: number | null
+          payment_date: string | null
+          payment_support: string | null
+          refund: number | null
+          user_id: string | null
+          user_id_liquidator: string | null
+        }
+        Insert: {
+          created_at?: string
+          final_balance?: number | null
+          id?: string
+          initial_balance?: number | null
+          int_liq_code?: string | null
+          liquidation_value?: number | null
+          payment_date?: string | null
+          payment_support?: string | null
+          refund?: number | null
+          user_id?: string | null
+          user_id_liquidator?: string | null
+        }
+        Update: {
+          created_at?: string
+          final_balance?: number | null
+          id?: string
+          initial_balance?: number | null
+          int_liq_code?: string | null
+          liquidation_value?: number | null
+          payment_date?: string | null
+          payment_support?: string | null
+          refund?: number | null
+          user_id?: string | null
+          user_id_liquidator?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_liquidation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_liquidation_user_id_liquidator_fkey"
+            columns: ["user_id_liquidator"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caja_chica_reg_detail: {
+        Row: {
+          caja_chica_id: string | null
+          created_at: string
+          details: string | null
+          id: string
+          register_by_id: string | null
+        }
+        Insert: {
+          caja_chica_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          register_by_id?: string | null
+        }
+        Update: {
+          caja_chica_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          register_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caja_chica_reg_detail_caja_chica_id_fkey"
+            columns: ["caja_chica_id"]
+            isOneToOne: false
+            referencedRelation: "caja_chica_registros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_reg_detail_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caja_chica_registros: {
+        Row: {
+          caso_id: string | null
+          client_id: string | null
+          client_liquidation: boolean | null
+          client_liquidation_id: string | null
+          concept: string | null
+          created_at: string
+          date: string | null
+          id: string
+          internal_liquidation: boolean | null
+          internal_liquidation_id: string | null
+          process_id: string | null
+          register_by_email: string | null
+          register_by_id: string | null
+          value: number | null
+        }
+        Insert: {
+          caso_id?: string | null
+          client_id?: string | null
+          client_liquidation?: boolean | null
+          client_liquidation_id?: string | null
+          concept?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          internal_liquidation?: boolean | null
+          internal_liquidation_id?: string | null
+          process_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          caso_id?: string | null
+          client_id?: string | null
+          client_liquidation?: boolean | null
+          client_liquidation_id?: string | null
+          concept?: string | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          internal_liquidation?: boolean | null
+          internal_liquidation_id?: string | null
+          process_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caja_chica_registros_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_registros_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_registros_client_liquidation_id_fkey"
+            columns: ["client_liquidation_id"]
+            isOneToOne: false
+            referencedRelation: "caja_chica_liq_client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_registros_internal_liquidation_id_fkey"
+            columns: ["internal_liquidation_id"]
+            isOneToOne: false
+            referencedRelation: "caja_chica_liq_internal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_registros_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "process"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_registros_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caja_chica_saldos: {
+        Row: {
+          available_balance: number | null
+          created_at: string
+          id: string
+          pending_liquidation: number | null
+          user_id: string | null
+        }
+        Insert: {
+          available_balance?: number | null
+          created_at?: string
+          id?: string
+          pending_liquidation?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          available_balance?: number | null
+          created_at?: string
+          id?: string
+          pending_liquidation?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caja_chica_saldos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caja_chica_soportes: {
+        Row: {
+          caja_chica_id: string | null
+          caso_id: string | null
+          client_id: string | null
+          created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          register_by_email: string | null
+          register_by_id: string | null
+        }
+        Insert: {
+          caja_chica_id?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+        }
+        Update: {
+          caja_chica_id?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caja_chica_soportes_caja_chica_id_fkey"
+            columns: ["caja_chica_id"]
+            isOneToOne: false
+            referencedRelation: "caja_chica_registros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_soportes_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_soportes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caja_chica_soportes_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -97,66 +631,69 @@ export type Database = {
           },
         ]
       }
-      clientes: {
+      client: {
         Row: {
-          address: string | null
           assigned_to: string | null
+          client_address: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
           client_type: string | null
           created_at: string
-          email: string | null
+          discount: boolean | null
+          enable: boolean | null
+          hour_payment: boolean | null
           id: string
-          last_activity: string | null
+          id_number: string | null
+          id_type: string | null
           last_update: string | null
-          name: string | null
-          next_activity: string | null
-          notes: string | null
-          phone_number: string | null
-          photo: string | null
-          potential_value: number | null
+          logo: string | null
+          monthly_value: number | null
+          registered_by_email: string | null
           registered_by_id: string | null
-          registered_by_name: string | null
-          status: string | null
-          tags: string[] | null
+          sector: string | null
         }
         Insert: {
-          address?: string | null
           assigned_to?: string | null
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           client_type?: string | null
           created_at?: string
-          email?: string | null
+          discount?: boolean | null
+          enable?: boolean | null
+          hour_payment?: boolean | null
           id?: string
-          last_activity?: string | null
+          id_number?: string | null
+          id_type?: string | null
           last_update?: string | null
-          name?: string | null
-          next_activity?: string | null
-          notes?: string | null
-          phone_number?: string | null
-          photo?: string | null
-          potential_value?: number | null
+          logo?: string | null
+          monthly_value?: number | null
+          registered_by_email?: string | null
           registered_by_id?: string | null
-          registered_by_name?: string | null
-          status?: string | null
-          tags?: string[] | null
+          sector?: string | null
         }
         Update: {
-          address?: string | null
           assigned_to?: string | null
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           client_type?: string | null
           created_at?: string
-          email?: string | null
+          discount?: boolean | null
+          enable?: boolean | null
+          hour_payment?: boolean | null
           id?: string
-          last_activity?: string | null
+          id_number?: string | null
+          id_type?: string | null
           last_update?: string | null
-          name?: string | null
-          next_activity?: string | null
-          notes?: string | null
-          phone_number?: string | null
-          photo?: string | null
-          potential_value?: number | null
+          logo?: string | null
+          monthly_value?: number | null
+          registered_by_email?: string | null
           registered_by_id?: string | null
-          registered_by_name?: string | null
-          status?: string | null
-          tags?: string[] | null
+          sector?: string | null
         }
         Relationships: [
           {
@@ -169,6 +706,176 @@ export type Database = {
           {
             foreignKeyName: "clientes_registered_by_id_fkey"
             columns: ["registered_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_casos: {
+        Row: {
+          case_name: string | null
+          client_id: string | null
+          close: boolean | null
+          created_at: string
+          end_date_planned: string | null
+          end_date_real: string | null
+          id: string
+          materia_id: string | null
+          process_id: string | null
+          register_by_id: string | null
+          registre_by_email: string | null
+          responsible_id: string | null
+          star_date: string | null
+          termino: number | null
+        }
+        Insert: {
+          case_name?: string | null
+          client_id?: string | null
+          close?: boolean | null
+          created_at?: string
+          end_date_planned?: string | null
+          end_date_real?: string | null
+          id?: string
+          materia_id?: string | null
+          process_id?: string | null
+          register_by_id?: string | null
+          registre_by_email?: string | null
+          responsible_id?: string | null
+          star_date?: string | null
+          termino?: number | null
+        }
+        Update: {
+          case_name?: string | null
+          client_id?: string | null
+          close?: boolean | null
+          created_at?: string
+          end_date_planned?: string | null
+          end_date_real?: string | null
+          id?: string
+          materia_id?: string | null
+          process_id?: string | null
+          register_by_id?: string | null
+          registre_by_email?: string | null
+          responsible_id?: string | null
+          star_date?: string | null
+          termino?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "casos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "casos_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "casos_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_tramites: {
+        Row: {
+          caso_id: string | null
+          client_id: string | null
+          close: boolean | null
+          created_at: string
+          department_id: string | null
+          end_date_planned: string | null
+          end_date_real: string | null
+          id: string
+          institution_id: string | null
+          register_by_email: string | null
+          register_by_id: string | null
+          responsible_id: string | null
+          start_date: string | null
+          termino: number | null
+          tramite_name: string | null
+        }
+        Insert: {
+          caso_id?: string | null
+          client_id?: string | null
+          close?: boolean | null
+          created_at?: string
+          department_id?: string | null
+          end_date_planned?: string | null
+          end_date_real?: string | null
+          id?: string
+          institution_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          start_date?: string | null
+          termino?: number | null
+          tramite_name?: string | null
+        }
+        Update: {
+          caso_id?: string | null
+          client_id?: string | null
+          close?: boolean | null
+          created_at?: string
+          department_id?: string | null
+          end_date_planned?: string | null
+          end_date_real?: string | null
+          id?: string
+          institution_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          start_date?: string | null
+          termino?: number | null
+          tramite_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tramites_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tramites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tramites_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tramites_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tramites_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tramites_responsible_id_fkey"
+            columns: ["responsible_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -229,40 +936,83 @@ export type Database = {
           },
         ]
       }
-      file_upload_inf: {
+      habilitantes: {
         Row: {
+          client_id: string | null
           created_at: string
-          download_url: string | null
-          file_extension: string | null
-          file_name: string | null
+          exp_date: string | null
+          file_type: string | null
+          file_url: string | null
+          habilitantes_name: string | null
           id: string
-          user_id: string | null
+          register_by_email: string | null
+          register_by_id: string | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
-          download_url?: string | null
-          file_extension?: string | null
-          file_name?: string | null
+          exp_date?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          habilitantes_name?: string | null
           id?: string
-          user_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
-          download_url?: string | null
-          file_extension?: string | null
-          file_name?: string | null
+          exp_date?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          habilitantes_name?: string | null
           id?: string
-          user_id?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "file_upload_inf_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "habilitantes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habilitantes_register_by_id_fkey"
+            columns: ["register_by_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          holiday: string | null
+          id: string
+          original_date: string | null
+          real_date: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          holiday?: string | null
+          id?: string
+          original_date?: string | null
+          real_date?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          holiday?: string | null
+          id?: string
+          original_date?: string | null
+          real_date?: string | null
+          year?: number | null
+        }
+        Relationships: []
       }
       institution: {
         Row: {
@@ -309,6 +1059,106 @@ export type Database = {
         }
         Relationships: []
       }
+      materia: {
+        Row: {
+          created_at: string
+          enabled: boolean | null
+          id: string
+          materia_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          materia_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          materia_name?: string | null
+        }
+        Relationships: []
+      }
+      notifications_email: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string | null
+          related_id: string | null
+          sent: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          related_id?: string | null
+          sent?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          related_id?: string | null
+          sent?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_email_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications_push: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string | null
+          new: boolean | null
+          read: boolean | null
+          related_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          new?: boolean | null
+          read?: boolean | null
+          related_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          new?: boolean | null
+          read?: boolean | null
+          related_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_push_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permisos: {
         Row: {
           create: boolean | null
@@ -342,41 +1192,114 @@ export type Database = {
         }
         Relationships: []
       }
-      procesos: {
+      process: {
         Row: {
           created_at: string
-          department_id: string | null
+          enable: boolean | null
           id: string
-          institution_id: string | null
-          name: string | null
+          materia_id: string | null
+          process_name: string | null
         }
         Insert: {
           created_at?: string
-          department_id?: string | null
+          enable?: boolean | null
           id?: string
-          institution_id?: string | null
-          name?: string | null
+          materia_id?: string | null
+          process_name?: string | null
         }
         Update: {
           created_at?: string
-          department_id?: string | null
+          enable?: boolean | null
           id?: string
-          institution_id?: string | null
-          name?: string | null
+          materia_id?: string | null
+          process_name?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "projects_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: "process_materia_id_fkey"
+            columns: ["materia_id"]
             isOneToOne: false
-            referencedRelation: "departments"
+            referencedRelation: "materia"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_activities: {
+        Row: {
+          activity_order: number | null
+          created_at: string
+          id: string
+          process_activity_name: string | null
+          process_activity_term: number | null
+          process_id: string | null
+          process_tramite_id: string | null
+        }
+        Insert: {
+          activity_order?: number | null
+          created_at?: string
+          id?: string
+          process_activity_name?: string | null
+          process_activity_term?: number | null
+          process_id?: string | null
+          process_tramite_id?: string | null
+        }
+        Update: {
+          activity_order?: number | null
+          created_at?: string
+          id?: string
+          process_activity_name?: string | null
+          process_activity_term?: number | null
+          process_id?: string | null
+          process_tramite_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_activities_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "process"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "projects_institution_id_fkey"
-            columns: ["institution_id"]
+            foreignKeyName: "process_activities_process_tramite_id_fkey"
+            columns: ["process_tramite_id"]
             isOneToOne: false
-            referencedRelation: "institution"
+            referencedRelation: "process_tramites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_tramites: {
+        Row: {
+          created_at: string
+          id: string
+          process_id: string | null
+          process_tramite_name: string | null
+          process_tramite_term: number | null
+          tramite_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          process_id?: string | null
+          process_tramite_name?: string | null
+          process_tramite_term?: number | null
+          tramite_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          process_id?: string | null
+          process_tramite_name?: string | null
+          process_tramite_term?: number | null
+          tramite_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_tramites_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "process"
             referencedColumns: ["id"]
           },
         ]
@@ -399,94 +1322,216 @@ export type Database = {
         }
         Relationships: []
       }
-      tramites: {
+      reg_facturable: {
         Row: {
+          activity: string | null
+          caso_id: string | null
+          client_id: string | null
           created_at: string
-          department_id: string | null
+          details: string | null
+          duration_real: number | null
+          duration_to_bill: number | null
+          end_date_time: string | null
+          hour_value: number | null
           id: string
-          institution_id: string | null
-          name: string | null
-          proceso_id: string | null
+          is_liquidated: boolean | null
+          register_by_email: string | null
+          register_by_id: string | null
+          start_date_time: string | null
+          total_value: number | null
+          tramite_id: string | null
         }
         Insert: {
+          activity?: string | null
+          caso_id?: string | null
+          client_id?: string | null
           created_at?: string
-          department_id?: string | null
+          details?: string | null
+          duration_real?: number | null
+          duration_to_bill?: number | null
+          end_date_time?: string | null
+          hour_value?: number | null
           id?: string
-          institution_id?: string | null
-          name?: string | null
-          proceso_id?: string | null
+          is_liquidated?: boolean | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          start_date_time?: string | null
+          total_value?: number | null
+          tramite_id?: string | null
         }
         Update: {
+          activity?: string | null
+          caso_id?: string | null
+          client_id?: string | null
           created_at?: string
-          department_id?: string | null
+          details?: string | null
+          duration_real?: number | null
+          duration_to_bill?: number | null
+          end_date_time?: string | null
+          hour_value?: number | null
           id?: string
-          institution_id?: string | null
-          name?: string | null
-          proceso_id?: string | null
+          is_liquidated?: boolean | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          start_date_time?: string | null
+          total_value?: number | null
+          tramite_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "tramites_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: "reg_facturable_caso_id_fkey"
+            columns: ["caso_id"]
             isOneToOne: false
-            referencedRelation: "departments"
+            referencedRelation: "client_casos"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tramites_institution_id_fkey"
-            columns: ["institution_id"]
+            foreignKeyName: "reg_facturable_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "institution"
+            referencedRelation: "client"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tramites_proceso_id_fkey"
-            columns: ["proceso_id"]
+            foreignKeyName: "reg_facturable_register_by_id_fkey"
+            columns: ["register_by_id"]
             isOneToOne: false
-            referencedRelation: "procesos"
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reg_facturable_tramite_id_fkey"
+            columns: ["tramite_id"]
+            isOneToOne: false
+            referencedRelation: "client_tramites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reg_facturable_liq: {
+        Row: {
+          bill_support: string | null
+          caso_id: string | null
+          client_id: string | null
+          created_at: string
+          duration_total: number | null
+          id: string
+          liq_code: string | null
+          payment_support: string | null
+          user_id_liquidator: string | null
+          value_total: number | null
+        }
+        Insert: {
+          bill_support?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          duration_total?: number | null
+          id?: string
+          liq_code?: string | null
+          payment_support?: string | null
+          user_id_liquidator?: string | null
+          value_total?: number | null
+        }
+        Update: {
+          bill_support?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          duration_total?: number | null
+          id?: string
+          liq_code?: string | null
+          payment_support?: string | null
+          user_id_liquidator?: string | null
+          value_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reg_facturable_liq_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reg_facturable_liq_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reg_facturable_liq_user_id_liquidator_fkey"
+            columns: ["user_id_liquidator"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
       users: {
         Row: {
+          category: string | null
           created_at: string
           department_id: string | null
           display_name: string | null
           email: string | null
           enable: boolean | null
           first_login: boolean | null
+          hour_value: number | null
+          hourly_rates: boolean | null
           id: string
           institution_id: string | null
+          names: string | null
           phone_number: string | null
           photo_url: string | null
+          register_by_email: string | null
+          register_by_id: string | null
           rol_name: string | null
+          surnames: string | null
+          title: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           department_id?: string | null
           display_name?: string | null
           email?: string | null
           enable?: boolean | null
           first_login?: boolean | null
+          hour_value?: number | null
+          hourly_rates?: boolean | null
           id: string
           institution_id?: string | null
+          names?: string | null
           phone_number?: string | null
           photo_url?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
           rol_name?: string | null
+          surnames?: string | null
+          title?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           department_id?: string | null
           display_name?: string | null
           email?: string | null
           enable?: boolean | null
           first_login?: boolean | null
+          hour_value?: number | null
+          hourly_rates?: boolean | null
           id?: string
           institution_id?: string | null
+          names?: string | null
           phone_number?: string | null
           photo_url?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
           rol_name?: string | null
+          surnames?: string | null
+          title?: string | null
         }
         Relationships: [
           {
@@ -508,6 +1553,99 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institution"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_notes: {
+        Row: {
+          assigned: boolean | null
+          audio_duration_seconds: number | null
+          audio_url: string | null
+          caso_id: string | null
+          client_id: string | null
+          comment: string | null
+          comment_responsible: string | null
+          completed: boolean | null
+          completed_date: string | null
+          created_at: string
+          id: string
+          name: string | null
+          register_by_email: string | null
+          register_by_id: string | null
+          responsible_id: string | null
+          tramite_id: string | null
+        }
+        Insert: {
+          assigned?: boolean | null
+          audio_duration_seconds?: number | null
+          audio_url?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          comment?: string | null
+          comment_responsible?: string | null
+          completed?: boolean | null
+          completed_date?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          tramite_id?: string | null
+        }
+        Update: {
+          assigned?: boolean | null
+          audio_duration_seconds?: number | null
+          audio_url?: string | null
+          caso_id?: string | null
+          client_id?: string | null
+          comment?: string | null
+          comment_responsible?: string | null
+          completed?: boolean | null
+          completed_date?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          register_by_email?: string | null
+          register_by_id?: string | null
+          responsible_id?: string | null
+          tramite_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_notes_caso_id_fkey"
+            columns: ["caso_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_notes_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_notes_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_notes_tramite_id_fkey"
+            columns: ["tramite_id"]
+            isOneToOne: false
+            referencedRelation: "client_tramites"
             referencedColumns: ["id"]
           },
         ]
