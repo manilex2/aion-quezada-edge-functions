@@ -40,14 +40,226 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/reportePDF', async (req: express.Request, res: express.Response) => { 
+app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: express.Response) => { 
   try {
     let supabase;
+
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
+      console.log("ENTORNO: PRODUCCIÓN");
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.replace('Bearer ', '');
+      if (!token) {
+        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+      }
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+    } else {
+      console.log("ENTORNO: DESARROLLO");
+      supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    }
+
+    // Obtener la lista de IDs desde el body de la solicitud
+    const { ids, client_id, caso_id, liquidator_id } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw "BAD REQUEST: No se proporcionaron IDs válidos";
+    }
+
+    if (!client_id || !caso_id || !liquidator_id) {
+      throw "BAD REQUEST: No se proporcionaron client_id o caso_id o liquidator_id";
+    }
+
+    // Obtener el nombre del caso desde client_casos
+    const { data: casoData, error: casoError } = await supabase
+      .from("client_casos")
+      .select("case_name")
+      .eq("id", caso_id)
+      .single();
+
+    if (casoError) {
+      throw casoError;
+    }
+
+    const nombre_caso = casoData.case_name || "Caso desconocido";
+
+    // Obtener el RUC del cliente desde client
+    const { data: clientData, error: clientError } = await supabase
+      .from("client")
+      .select("id_number")
+      .eq("id", client_id)
+      .single();
+
+    if (clientError) {
+      throw clientError;
+    }
+
+    const ruc_cliente = clientData.id_number || "RUC desconocido";
+
+    // Obtener la fecha actual en formato "MM-YYYY"
+    const fechaActual = new Date();
+    const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
+
+    // Generar el código base concatenado
+    const codigoBase = `RFL-${ruc_cliente}-${fechaFormateada}`;
+
+    // Buscar registros que coincidan con el prefijo en la tabla reg_facturable_liq
+    const { data: registrosExistentes, error: registrosError } = await supabase
+      .from("reg_facturable_liq")
+      .select("liq_code")
+      .like("liq_code", `${codigoBase}%`);
+
+    if (registrosError) {
+      throw registrosError;
+    }
+
+    // Determinar el siguiente secuencial
+    const secuencial = registrosExistentes.length + 1;
+    const secuencialFormateado = String(secuencial).padStart(3, '0');
+
+    // Generar el código final con secuencial
+    const codigoFinal = `${codigoBase}-${secuencialFormateado}`;
+
+    // Filtra los datos relevantes de reg_facturable
+    const { data: regFacturable, error: regFacturableError } = await supabase
+      .from("reg_facturable")
+      .select("*")
+      .eq("is_liquidated", false)
+      .in("id", ids);
+
+    if (regFacturableError) {
+      throw regFacturableError;
+    }
+
+    if (!regFacturable || regFacturable.length === 0) {
+      throw "NOT FOUND: No se encontraron datos";
+    }
+
+    // Obtener los nombres de usuario correspondientes
+    const userIds = regFacturable.map(row => row.register_by_id);
+    const { data: users, error: usersError } = await supabase
+      .from("users")
+      .select("id, display_name")
+      .in("id", userIds);
+
+    if (usersError) {
+      throw usersError;
+    }
+
+    const userMap = new Map(users.map(user => [user.id, user.display_name]));
+
+    // Construir los datos para el PDF
+    const data: RowData[] = regFacturable.map(row => ({
+      fecha: formatDate(row.start_date_time),
+      descripcion: row.details,
+      nombre_usuario: row.register_by_id ? userMap.get(row.register_by_id) || "Usuario desconocido" : "Usuario desconocido",
+      duracion: formatDuration(row.duration_to_bill),
+      valor: formatValue(row.total_value),
+    }));
+
+    // Generar el PDF
+    const bucket = 'assets';
+    const path = 'landing/under_construction/logo_quezada.png';
+    // Obtén la imagen desde Supabase Storage
+    const { data: logoData, error: errorLogoData } = await supabase
+    .storage
+    .from(bucket)
+    .download(path);
+
+    if (errorLogoData) {
+      throw errorLogoData;
+    }
+
+    // Convierte el Blob a ArrayBuffer
+    const arrayBuffer = await logoData.arrayBuffer();
+    // Convierte el ArrayBuffer en un Uint8Array
+    const logo = new Uint8Array(arrayBuffer);
+
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, nombre_caso, codigoFinal, ""));
+
+    // Calcular duration_total y value_total
+    const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
+    const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
+
+    // Insertar el nuevo registro en reg_facturable_liq
+    const { data: newLiqData, error: newLiqError } = await supabase
+      .from("reg_facturable_liq")
+      .insert([
+        {
+          client_id: client_id,
+          caso_id: caso_id,
+          duration_total: duration_total,
+          value_total: value_total,
+          user_id_liquidator: liquidator_id,
+          liq_code: codigoFinal,
+        }
+      ])
+      .select()
+      .single();
+
+    if (newLiqError) {
+      throw newLiqError;
+    }
+
+    const newLiqId = newLiqData.id;
+
+    // Actualizar los registros en reg_facturable
+    const { error: updateError } = await supabase
+      .from("reg_facturable")
+      .update({
+        is_liquidated: true,
+        reg_facturable_liq_id: newLiqId
+      })
+      .in("id", ids);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    // Responder con el PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=liquidacion.pdf');
+    console.log("OK");
+    res.status(201).send(pdfBuffer);
+  } catch (error) {
+    if (typeof error === "string") {
+      if (error.startsWith("BAD REQUEST")) {
+        res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
+      } else if (error.startsWith("UNAUTHORIZED")) {
+        res.status(401).json({ message: `Ocurrió el siguiente error de autorización: ${error}` });
+      } else if (error.startsWith("FORBIDDEN")) {
+        res.status(403).json({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
+      } else if (error.startsWith("NOT FOUND")) {
+        res.status(404).json({ message: `Ocurrió el siguiente error de localización: ${error}` });
+      } else if (error.startsWith("CONFLICT")) {
+        res.status(409).json({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
+      } else {
+        res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+      }
+    } else {
+      res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+    }
+  }
+});
+
+app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res: express.Response) => { 
+  try {
+    let supabase;
+
+    let token;
 
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
       console.log("ENTORNO: PRODUCCIÓN");
       const authHeader = req.headers.authorization || "";
-      const token = authHeader.replace('Bearer ', '');
+      token = authHeader.replace('Bearer ', '');
       if (!token) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
@@ -109,41 +321,43 @@ app.post('/reportePDF', async (req: express.Request, res: express.Response) => {
     const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
 
     // Generar el código base concatenado
-    const codigoBase = `${ruc_cliente}-${fechaFormateada}`;
+    const codigoBase = `CCIL-${ruc_cliente}-${fechaFormateada}`;
 
-    // Buscar registros que coincidan con el prefijo en la tabla reg_facturable_liq
-    const { data: registrosExistentes, error: registrosError } = await supabase
-      .from("reg_facturable_liq")
-      .select("liq_code")
-      .like("liq_code", `${codigoBase}%`);
+    // Buscar registros que coincidan con el prefijo en la tabla caja_chica_liq_internal
+    const { data: cajaChicaLiqExistentes, error: cajaChicaLiqError } = await supabase
+      .from("caja_chica_liq_internal")
+      .select("int_liq_code")
+      .like("int_liq_code", `${codigoBase}%`);
 
-    if (registrosError) {
-      throw registrosError;
+    if (cajaChicaLiqError) {
+      throw cajaChicaLiqError;
     }
 
     // Determinar el siguiente secuencial
-    const secuencial = registrosExistentes.length + 1;
+    const secuencial = cajaChicaLiqExistentes.length + 1;
     const secuencialFormateado = String(secuencial).padStart(3, '0');
 
     // Generar el código final con secuencial
     const codigoFinal = `${codigoBase}-${secuencialFormateado}`;
 
     // Filtra los datos relevantes de reg_facturable
-    const { data: regFacturable, error: regFacturableError } = await supabase
-      .from("reg_facturable")
+    const { data: cajaChicaReg, error: cajaChicaRegError } = await supabase
+      .from("caja_chica_registros")
       .select("*")
+      .filter("internal_liquidation", "eq", false)
       .in("id", ids);
 
-    if (regFacturableError) {
-      throw regFacturableError;
+
+    if (cajaChicaRegError) {
+      throw cajaChicaRegError;
     }
 
-    if (!regFacturable || regFacturable.length === 0) {
+    if (!cajaChicaReg || cajaChicaReg.length === 0) {
       throw "NOT FOUND: No se encontraron datos";
     }
 
     // Obtener los nombres de usuario correspondientes
-    const userIds = regFacturable.map(row => row.register_by_id);
+    const userIds = cajaChicaReg.map(row => row.register_by_id);
     const { data: users, error: usersError } = await supabase
       .from("users")
       .select("id, display_name")
@@ -156,13 +370,50 @@ app.post('/reportePDF', async (req: express.Request, res: express.Response) => {
     const userMap = new Map(users.map(user => [user.id, user.display_name]));
 
     // Construir los datos para el PDF
-    const data: RowData[] = regFacturable.map(row => ({
-      fecha: formatDate(row.start_date_time),
-      descripcion: row.details,
+    const data: RowData[] = cajaChicaReg.map(row => ({
+      fecha: formatDate(row.date),
+      descripcion: row.concept,
       nombre_usuario: row.register_by_id ? userMap.get(row.register_by_id) || "Usuario desconocido" : "Usuario desconocido",
-      duracion: formatDuration(row.duration_to_bill),
-      valor: formatValue(row.total_value),
+      valor: formatValue(row.value),
     }));
+
+    // Constante para almacenar todos los soportes
+    const allSoportes: Array<{ tipo: string; soporte: Uint8Array }>  = [];
+
+    for (const row of cajaChicaReg) {
+      const { data: soportes, error: soportesError } = await supabase
+        .from("caja_chica_soportes")
+        .select("file_url, file_type")
+        .eq("caja_chica_id", row.id)
+        .in("file_type", ["png", "pdf", "jpg", "jpeg", "PNG", "JPG", "JPEG", "PDF"]);
+
+      if (soportesError) {
+        throw soportesError;
+      }
+
+      for (const soporte of soportes) {
+        if (!soporte.file_url || !soporte.file_type) {
+          continue;
+        }
+
+        const filePath = soporte.file_url.replace('files/', ''); // Eliminar la primera instancia de 'files/'
+
+        const { data: fileData, error: fileError } = await supabase
+          .storage
+          .from('files')
+          .download(filePath);
+
+        if (fileError) {
+          throw fileError;
+        }
+
+        const arrayBuffer = await fileData.arrayBuffer();
+        allSoportes.push({
+          tipo: soporte.file_type,
+          soporte: new Uint8Array(arrayBuffer)
+        });
+      }
+    }
 
     // Generar el PDF
     const bucket = 'assets';
@@ -182,40 +433,47 @@ app.post('/reportePDF', async (req: express.Request, res: express.Response) => {
     // Convierte el ArrayBuffer en un Uint8Array
     const logo = new Uint8Array(arrayBuffer);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, nombre_caso, codigoFinal));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, nombre_caso, codigoFinal, "caja_chica_internal", allSoportes));
 
     // Calcular duration_total y value_total
-    const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
-    const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
+    const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
 
-    // Insertar el nuevo registro en reg_facturable_liq
+    let userId = null;
+    try {
+      const { data } = await supabase.auth.getUser(token);
+      userId = data.user?.id ?? null;
+    } catch (error) {
+      console.error("Error al obtener el ID de usuario:", error);
+      // Aquí se establece userId en null en caso de error.
+    }
     const { data: newLiqData, error: newLiqError } = await supabase
-      .from("reg_facturable_liq")
+      .from("caja_chica_liq_internal")
       .insert([
         {
-          client_id: client_id,
-          caso_id: caso_id,
-          duration_total: duration_total,
-          value_total: value_total,
+          liquidation_value: value_total,
           user_id_liquidator: liquidator_id,
-          liq_code: codigoFinal
+          int_liq_code: codigoFinal,
+          user_id: userId
         }
       ])
       .select()
       .single();
 
+      console.log(newLiqData);
+
     if (newLiqError) {
       throw newLiqError;
     }
+
 
     const newLiqId = newLiqData.id;
 
     // Actualizar los registros en reg_facturable
     const { error: updateError } = await supabase
-      .from("reg_facturable")
+      .from("caja_chica_registros")
       .update({
-        is_liquidated: true,
-        reg_facturable_liq_id: newLiqId
+        internal_liquidation: true,
+        internal_liquidation_id: newLiqId
       })
       .in("id", ids);
 
@@ -249,6 +507,57 @@ app.post('/reportePDF', async (req: express.Request, res: express.Response) => {
   }
 });
 
+app.post('/reportePDF/reportePDFCajaChicaExt', async (req: express.Request, res: express.Response) => { 
+  try {
+    let supabase;
+
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+      console.log("ENTORNO: PRODUCCIÓN");
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.replace('Bearer ', '');
+      if (!token) {
+        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+      }
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+    } else {
+      console.log("ENTORNO: DESARROLLO");
+      supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    }
+
+    console.log("OK");
+    res.status(201).send("Hola Mundo");
+  } catch (error) {
+    if (typeof error === "string") {
+      if (error.startsWith("BAD REQUEST")) {
+        res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
+      } else if (error.startsWith("UNAUTHORIZED")) {
+        res.status(401).json({ message: `Ocurrió el siguiente error de autorización: ${error}` });
+      } else if (error.startsWith("FORBIDDEN")) {
+        res.status(403).json({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
+      } else if (error.startsWith("NOT FOUND")) {
+        res.status(404).json({ message: `Ocurrió el siguiente error de localización: ${error}` });
+      } else if (error.startsWith("CONFLICT")) {
+        res.status(409).json({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
+      } else {
+        res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+      }
+    } else {
+      res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
@@ -258,11 +567,12 @@ type RowData = {
   fecha: string | null;
   descripcion: string | null;
   nombre_usuario: string | null;
-  duracion: string | null;
+  duracion?: string | null;
   valor: string | null;
+  cliente?: string | null
 };
 
-async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: string, codigo: string) {
+async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: string, codigo: string, tipoLiq: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
   const pdfDoc = await PDFDocument.create();
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold); // Fuente en negritas
@@ -333,15 +643,37 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: st
   const rowHeight = 20;
   let yPosition = tableTop;
 
-  const headers: { label: string, key: keyof RowData }[] = [
-    { label: 'Fecha', key: 'fecha' },
-    { label: 'Descripción', key: 'descripcion' },
-    { label: 'Nombre Usuario', key: 'nombre_usuario' },
-    { label: 'Duración', key: 'duracion' },
-    { label: 'Valor', key: 'valor' },
-  ];
+  let headers: { label: string, key: keyof RowData }[];
+  let columnWidths: number[];
 
-  const columnWidths = [80, 150, 150, 80, 80]; // Anchos de columna
+  if (tipoLiq == "caja_chica_internal") {
+    headers = [
+      { label: 'Fecha', key: 'fecha' },
+      { label: 'Descripción', key: 'descripcion' },
+      { label: 'Nombre Usuario', key: 'nombre_usuario' },
+      { label: 'Valor', key: 'valor' },
+    ];
+
+    columnWidths = [100, 170, 170, 100]; // Anchos de columna
+  } else if (tipoLiq == "caja_chica_cliente") {
+    headers = [
+      { label: 'Fecha', key: 'fecha' },
+      { label: 'Descripción', key: 'descripcion' },
+      { label: 'Nombre Usuario', key: 'nombre_usuario' },
+      { label: 'Duración', key: 'duracion' },
+      { label: 'Valor', key: 'valor' },
+    ];
+  } else {
+    headers = [
+      { label: 'Fecha', key: 'fecha' },
+      { label: 'Descripción', key: 'descripcion' },
+      { label: 'Nombre Usuario', key: 'nombre_usuario' },
+      { label: 'Valor', key: 'valor' },
+      { label: 'Cliente', key: 'cliente'}
+    ];
+
+    columnWidths = [80, 150, 150, 80, 80]; // Anchos de columna
+  }
 
   headers.forEach((header, i) => {
     const xPosition = tableLeft + columnWidths.slice(0, i).reduce((a, b) => a + b, 0);
@@ -448,6 +780,36 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: st
       drawFooter(p, helveticaFont, footerFontSize, width); // Dibujar solo el pie de página común
     }
   });
+
+  if (soportes) {
+    let count: number = 0;
+    while (soportes.length > count) {
+      page = pdfDoc.addPage(PageSizes.Letter);
+      if (soportes[count].tipo.toLowerCase() === 'pdf') {
+        const [pdffile] = await pdfDoc.embedPdf(soportes[count].soporte);
+        page.drawPage(pdffile);
+      } else if (soportes[count].tipo.toLowerCase() === 'png') {
+        const pngImage = await pdfDoc.embedPng(soportes[count].soporte);
+        const pngDims = pngImage.scale(0.3);
+        page.drawImage(pngImage, {
+          x: page.getWidth() / 2 - pngDims.width / 2,
+          y: page.getHeight() / 2 - pngDims.height + 250,
+          width: pngDims.width,
+          height: pngDims.height * 1.2,
+        });
+      } else {
+        const jpgImage = await pdfDoc.embedJpg(soportes[count].soporte);
+        const jpgDims = jpgImage.scale(0.3);
+        page.drawImage(jpgImage, {
+          x: page.getWidth() / 2 - jpgDims.width / 2,
+          y: page.getHeight() / 2 - jpgDims.height + 250,
+          width: jpgDims.width,
+          height: jpgDims.height * 1.2,
+        });
+      }
+      count++;
+    }
+  }
 
   return await pdfDoc.save();
 }

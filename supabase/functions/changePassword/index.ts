@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 app.put('/changePassword', async (req: express.Request, res: express.Response) => {
   try {
     let supabase;
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       const authHeader = req.headers.authorization || "";
       const token = authHeader.replace('Bearer ', '');

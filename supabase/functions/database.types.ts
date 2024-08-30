@@ -261,7 +261,7 @@ export type Database = {
           id: string
           max_payment_day: string | null
           payment_support: string | null
-          user_id_loquidator: string | null
+          user_id_liquidator: string | null
           value: number | null
         }
         Insert: {
@@ -273,7 +273,7 @@ export type Database = {
           id?: string
           max_payment_day?: string | null
           payment_support?: string | null
-          user_id_loquidator?: string | null
+          user_id_liquidator?: string | null
           value?: number | null
         }
         Update: {
@@ -285,10 +285,17 @@ export type Database = {
           id?: string
           max_payment_day?: string | null
           payment_support?: string | null
-          user_id_loquidator?: string | null
+          user_id_liquidator?: string | null
           value?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "caja_chica_liq_client_user_id_liquidator_fkey"
+            columns: ["user_id_liquidator"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "liquidation_client_caso_id_fkey"
             columns: ["caso_id"]
@@ -301,13 +308,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "client"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "liquidation_client_user_id_loquidator_fkey"
-            columns: ["user_id_loquidator"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1194,25 +1194,31 @@ export type Database = {
       }
       process: {
         Row: {
+          activities_quantity: number | null
           created_at: string
           enable: boolean | null
           id: string
           materia_id: string | null
           process_name: string | null
+          tramites_quantity: number | null
         }
         Insert: {
+          activities_quantity?: number | null
           created_at?: string
           enable?: boolean | null
           id?: string
           materia_id?: string | null
           process_name?: string | null
+          tramites_quantity?: number | null
         }
         Update: {
+          activities_quantity?: number | null
           created_at?: string
           enable?: boolean | null
           id?: string
           materia_id?: string | null
           process_name?: string | null
+          tramites_quantity?: number | null
         }
         Relationships: [
           {
@@ -1229,6 +1235,7 @@ export type Database = {
           activity_order: number | null
           created_at: string
           id: string
+          prev_activity_id: string | null
           process_activity_name: string | null
           process_activity_term: number | null
           process_id: string | null
@@ -1238,6 +1245,7 @@ export type Database = {
           activity_order?: number | null
           created_at?: string
           id?: string
+          prev_activity_id?: string | null
           process_activity_name?: string | null
           process_activity_term?: number | null
           process_id?: string | null
@@ -1247,12 +1255,20 @@ export type Database = {
           activity_order?: number | null
           created_at?: string
           id?: string
+          prev_activity_id?: string | null
           process_activity_name?: string | null
           process_activity_term?: number | null
           process_id?: string | null
           process_tramite_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "process_activities_prev_activity_id_fkey"
+            columns: ["prev_activity_id"]
+            isOneToOne: false
+            referencedRelation: "process_activities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "process_activities_process_id_fkey"
             columns: ["process_id"]
@@ -1269,10 +1285,67 @@ export type Database = {
           },
         ]
       }
+      process_activities_dependencies: {
+        Row: {
+          created_at: string
+          current_activity_id: string | null
+          id: string
+          prev_activity_id: string | null
+          process_id: string | null
+          process_tramite_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_activity_id?: string | null
+          id?: string
+          prev_activity_id?: string | null
+          process_id?: string | null
+          process_tramite_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_activity_id?: string | null
+          id?: string
+          prev_activity_id?: string | null
+          process_id?: string | null
+          process_tramite_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_activities_dependencies_current_activity_id_fkey"
+            columns: ["current_activity_id"]
+            isOneToOne: false
+            referencedRelation: "process_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_activities_dependencies_prev_activity_id_fkey"
+            columns: ["prev_activity_id"]
+            isOneToOne: false
+            referencedRelation: "process_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_activities_dependencies_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "process"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_activities_dependencies_process_tramite_id_fkey"
+            columns: ["process_tramite_id"]
+            isOneToOne: false
+            referencedRelation: "process_tramites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_tramites: {
         Row: {
           created_at: string
           id: string
+          prev_tramite_id: string | null
           process_id: string | null
           process_tramite_name: string | null
           process_tramite_term: number | null
@@ -1281,6 +1354,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          prev_tramite_id?: string | null
           process_id?: string | null
           process_tramite_name?: string | null
           process_tramite_term?: number | null
@@ -1289,6 +1363,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          prev_tramite_id?: string | null
           process_id?: string | null
           process_tramite_name?: string | null
           process_tramite_term?: number | null
@@ -1296,7 +1371,60 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "process_tramites_prev_tramite_id_fkey"
+            columns: ["prev_tramite_id"]
+            isOneToOne: false
+            referencedRelation: "process_tramites"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "process_tramites_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "process"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_tramites_dependencies: {
+        Row: {
+          created_at: string
+          current_tramite_id: string | null
+          id: string
+          previus_tramite_id: string | null
+          process_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_tramite_id?: string | null
+          id?: string
+          previus_tramite_id?: string | null
+          process_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_tramite_id?: string | null
+          id?: string
+          previus_tramite_id?: string | null
+          process_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_ tramites_dependencies_current_tramite_id_fkey"
+            columns: ["current_tramite_id"]
+            isOneToOne: false
+            referencedRelation: "process_tramites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_ tramites_dependencies_previus_tramite_id_fkey"
+            columns: ["previus_tramite_id"]
+            isOneToOne: false
+            referencedRelation: "process_tramites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_tramites_dependencies_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "process"
@@ -1335,6 +1463,7 @@ export type Database = {
           hour_value: number | null
           id: string
           is_liquidated: boolean | null
+          reg_facturable_liq_id: string | null
           register_by_email: string | null
           register_by_id: string | null
           start_date_time: string | null
@@ -1353,6 +1482,7 @@ export type Database = {
           hour_value?: number | null
           id?: string
           is_liquidated?: boolean | null
+          reg_facturable_liq_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           start_date_time?: string | null
@@ -1371,6 +1501,7 @@ export type Database = {
           hour_value?: number | null
           id?: string
           is_liquidated?: boolean | null
+          reg_facturable_liq_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           start_date_time?: string | null
@@ -1390,6 +1521,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reg_facturable_reg_facturable_liq_id_fkey"
+            columns: ["reg_facturable_liq_id"]
+            isOneToOne: false
+            referencedRelation: "reg_facturable_liq"
             referencedColumns: ["id"]
           },
           {
