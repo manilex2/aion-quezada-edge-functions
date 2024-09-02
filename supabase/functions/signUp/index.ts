@@ -84,7 +84,7 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
       const { data: user, error } = await supabase.auth.getUser();
 
       if (error || !user) {
-        return res.status(401).json({ error: 'Token de autorización inválido' });
+        throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
 
     } else {

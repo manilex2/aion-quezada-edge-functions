@@ -70,7 +70,7 @@ app.put('/password/changePassword', async (req: express.Request, res: express.Re
       const { data: user, error } = await supabase.auth.getUser();
 
       if (error || !user) {
-        return res.status(401).json({ error: 'Token de autorización inválido' });
+        throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
 
     } else {
@@ -141,8 +141,6 @@ app.post('/password/forgotPassword', async (req: express.Request, res: express.R
 
     let supabase;
 
-    let accessToken: string;
-
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -151,24 +149,6 @@ app.post('/password/forgotPassword', async (req: express.Request, res: express.R
           persistSession: false
         }
       })
-      // Obtener el token del encabezado de autorización
-      const authHeader = req.headers.authorization || "";
-      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
-
-      if (!accessToken) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
-      }
-
-      // Establecer el token de autenticación en el cliente de Supabase
-      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
-
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        return res.status(401).json({ error: 'Token de autorización inválido' });
-      }
-
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {

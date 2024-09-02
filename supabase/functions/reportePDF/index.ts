@@ -64,7 +64,7 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
       const { data: user, error } = await supabase.auth.getUser();
 
       if (error || !user) {
-        return res.status(401).json({ error: 'Token de autorización inválido' });
+        throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
 
     } else {
@@ -284,7 +284,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
       const { data: user, error } = await supabase.auth.getUser();
 
       if (error || !user) {
-        return res.status(401).json({ error: 'Token de autorización inválido' });
+        throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
 
     } else {
@@ -571,7 +571,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
       const { data: user, error } = await supabase.auth.getUser();
 
       if (error || !user) {
-        return res.status(401).json({ error: 'Token de autorización inválido' });
+        throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
 
     } else {
