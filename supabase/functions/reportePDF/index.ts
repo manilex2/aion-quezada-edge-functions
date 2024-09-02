@@ -7,7 +7,7 @@ import express from "npm:express@4.18.3";
 import { config } from "npm:dotenv@16.4.5";
 import process from "node:process";
 import { Buffer } from "node:buffer";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
+import { SupabaseClient, createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
 import { Database } from "../database.types.ts";
 import { getCorsHeaders } from '../_shared/cors.ts';
 import cors from "npm:cors";
@@ -42,22 +42,31 @@ app.use((req, res, next) => {
 
 app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: express.Response) => { 
   try {
-    let supabase;
+    let supabase: SupabaseClient;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
+    let accessToken: string;
+
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
       console.log("ENTORNO: PRODUCCIÓN");
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+      // Obtener el token del encabezado de autorización
       const authHeader = req.headers.authorization || "";
-      const token = authHeader.replace('Bearer ', '');
-      if (!token) {
+      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+
+      if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      });
+
+      // Establecer el token de autenticación en el cliente de Supabase
+      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        return res.status(401).json({ error: 'Token de autorización inválido' });
+      }
+
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
@@ -183,7 +192,7 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     // Convierte el ArrayBuffer en un Uint8Array
     const logo = new Uint8Array(arrayBuffer);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, nombre_caso, codigoFinal, ""));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "", nombre_caso));
 
     // Calcular duration_total y value_total
     const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
@@ -230,6 +239,7 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     console.log("OK");
     res.status(201).send(pdfBuffer);
   } catch (error) {
+    res.setHeader('Content-Type', 'application/json');
     if (typeof error === "string") {
       if (error.startsWith("BAD REQUEST")) {
         res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
@@ -250,26 +260,33 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
   }
 });
 
-app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res: express.Response) => { 
+app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, res: express.Response) => { 
   try {
-    let supabase;
+    let supabase: SupabaseClient;
 
-    let token;
+    let accessToken: string;
 
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
       console.log("ENTORNO: PRODUCCIÓN");
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+      // Obtener el token del encabezado de autorización
       const authHeader = req.headers.authorization || "";
-      token = authHeader.replace('Bearer ', '');
-      if (!token) {
+      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+
+      if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      });
+
+      // Establecer el token de autenticación en el cliente de Supabase
+      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        return res.status(401).json({ error: 'Token de autorización inválido' });
+      }
+
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
@@ -281,13 +298,308 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
     }
 
     // Obtener la lista de IDs desde el body de la solicitud
-    const { ids, client_id, caso_id, liquidator_id } = req.body;
+    const { ids, liquidator_id, user_id } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
       throw "BAD REQUEST: No se proporcionaron IDs válidos";
     }
 
-    if (!client_id || !caso_id) {
-      throw "BAD REQUEST: No se proporcionaron client_id o caso_id";
+    if (!liquidator_id) {
+      throw "BAD REQUEST: No se proporcionó liquidator_id";
+    }
+
+    if (!user_id) {
+      throw "BAD REQUEST: No se proporcionó user_id";
+    }
+
+    // Obtener el nombre del caso desde client_casos
+    const { data: casoData, error: casoError } = await supabase
+      .from("client_casos")
+      .select("id, case_name");
+
+    if (casoError) {
+      throw casoError;
+    }
+
+    // Obtener el RUC del cliente desde client
+    const { data: clientData, error: clientError } = await supabase
+      .from("client")
+      .select("id, client_name");
+
+    if (clientError) {
+      throw clientError;
+    }
+
+    // Obtener la fecha actual en formato "MM-YYYY"
+    const fechaActual = new Date();
+    const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
+
+    // Generar el código base concatenado
+    const codigoBase = `CCIL-${user_id}-${fechaFormateada}`;
+
+    // Buscar registros que coincidan con el prefijo en la tabla caja_chica_liq_internal
+    const { data: cajaChicaLiqExistentes, error: cajaChicaLiqError } = await supabase
+      .from("caja_chica_liq_internal")
+      .select("int_liq_code")
+      .like("int_liq_code", `${codigoBase}%`);
+
+    if (cajaChicaLiqError) {
+      throw cajaChicaLiqError;
+    }
+
+    // Determinar el siguiente secuencial
+    const secuencial = cajaChicaLiqExistentes.length + 1;
+    const secuencialFormateado = String(secuencial).padStart(3, '0');
+
+    // Generar el código final con secuencial
+    const codigoFinal = `${codigoBase}-${secuencialFormateado}`;
+
+    // Filtra los datos relevantes de reg_facturable
+    const { data: cajaChicaReg, error: cajaChicaRegError } = await supabase
+      .from("caja_chica_registros")
+      .select("*")
+      .filter("internal_liquidation", "eq", false)
+      .in("id", ids);
+
+
+    if (cajaChicaRegError) {
+      throw cajaChicaRegError;
+    }
+
+    if (!cajaChicaReg || cajaChicaReg.length === 0) {
+      throw "NOT FOUND: No se encontraron datos o ya hizo la liquidación interna de alguno de los registros";
+    }
+
+    // Obtener los nombres de usuario correspondientes
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id, display_name")
+      .eq("id", user_id)
+      .single();
+
+    if (userError) {
+      throw userError;
+    }
+
+    const clientMap = new Map(clientData.map(client => [client.id, client.client_name]));
+    const caseMap = new Map(casoData.map(caso => [caso.id, caso.case_name]));
+
+    // Construir los datos para el PDF
+    const data: RowData[] = cajaChicaReg.map(row => ({
+      fecha: formatDate(row.date),
+      descripcion: row.concept,
+      nombre_usuario: user_id ? user.display_name || "Usuario desconocido" : "Usuario desconocido",
+      valor: formatValue(row.value),
+      cliente: row.client_id ? clientMap.get(row.client_id) || "Cliente desconocido" : "Cliente desconocido",
+      caso: row.caso_id ? caseMap.get(row.caso_id) || "Caso desconocido" : "Caso desconocido",
+    }));
+
+    // Constante para almacenar todos los soportes
+    const allSoportes: Array<{ tipo: string; soporte: Uint8Array }>  = [];
+
+    for (const row of cajaChicaReg) {
+      const { data: soportes, error: soportesError } = await supabase
+        .from("caja_chica_soportes")
+        .select("file_url, file_type")
+        .eq("caja_chica_id", row.id)
+        .in("file_type", ["png", "pdf", "jpg", "jpeg", "PNG", "JPG", "JPEG", "PDF"]);
+
+      if (soportesError) {
+        throw soportesError;
+      }
+
+      for (const soporte of soportes) {
+        if (!soporte.file_url || !soporte.file_type) {
+          continue;
+        }
+
+        const filePath = soporte.file_url.replace('files/', ''); // Eliminar la primera instancia de 'files/'
+
+        const { data: fileData, error: fileError } = await supabase
+          .storage
+          .from('files')
+          .download(filePath);
+
+        if (fileError) {
+          throw fileError;
+        }
+
+        const arrayBuffer = await fileData.arrayBuffer();
+        allSoportes.push({
+          tipo: soporte.file_type,
+          soporte: new Uint8Array(arrayBuffer)
+        });
+      }
+    }
+
+    // Generar el PDF
+    const bucket = 'assets';
+    const path = 'landing/under_construction/logo_quezada.png';
+    // Obtén la imagen desde Supabase Storage
+    const { data: logoData, error: errorLogoData } = await supabase
+    .storage
+    .from(bucket)
+    .download(path);
+
+    if (errorLogoData) {
+      throw errorLogoData;
+    }
+
+    // Convierte el Blob a ArrayBuffer
+    const arrayBuffer = await logoData.arrayBuffer();
+    // Convierte el ArrayBuffer en un Uint8Array
+    const logo = new Uint8Array(arrayBuffer);
+
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_interna", undefined, allSoportes));
+
+    // Calcular duration_total y value_total
+    const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
+
+    const { data: cajaChicaSaldos, error: cajaChicaSaldosError} = await supabase
+      .from("caja_chica_saldos")
+      .select('*')
+      .eq("user_id", user_id)
+      .single();
+
+    if (cajaChicaLiqError) {
+      throw cajaChicaSaldosError;
+    }
+    const { data: newLiqData, error: newLiqError } = await supabase
+      .from("caja_chica_liq_internal")
+      .insert([
+        {
+          liquidation_value: value_total,
+          user_id_liquidator: liquidator_id,
+          int_liq_code: codigoFinal,
+          user_id: user_id,
+          initial_balance: cajaChicaSaldos? cajaChicaSaldos.available_balance : 0,
+          final_balance: cajaChicaSaldos? cajaChicaSaldos.available_balance? cajaChicaSaldos.available_balance + value_total : 0 : 0,
+          refund: value_total
+        }
+      ])
+      .select()
+      .single();
+
+    if (newLiqError) {
+      throw newLiqError;
+    }
+
+
+    const newLiqId = newLiqData.id;
+
+    // Actualizar los registros en reg_facturable
+    const { error: updateError } = await supabase
+      .from("caja_chica_registros")
+      .update({
+        internal_liquidation: true,
+        internal_liquidation_id: newLiqId
+      })
+      .in("id", ids);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    const newAvailableBalance = cajaChicaSaldos?.available_balance 
+      ? cajaChicaSaldos.available_balance + value_total 
+      : 0;
+
+    const newPendingLiquidation = cajaChicaSaldos?.pending_liquidation 
+      ? cajaChicaSaldos.pending_liquidation - value_total 
+      : 0;
+
+    const { error: updateCajaChicaSaldosError } = await supabase
+      .from("caja_chica_saldos")
+      .update({
+          pending_liquidation: newPendingLiquidation,
+          available_balance: newAvailableBalance,
+      })
+      .eq("user_id", user_id)
+      .single();
+
+    if (updateCajaChicaSaldosError) {
+        throw updateCajaChicaSaldosError;
+    }
+
+    // Responder con el PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=liquidacion.pdf');
+    console.log("OK");
+    res.status(201).send(pdfBuffer);
+  } catch (error) {
+    res.setHeader('Content-Type', 'application/json');
+    if (typeof error === "string") {
+      if (error.startsWith("BAD REQUEST")) {
+        res.status(400).send({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
+      } else if (error.startsWith("UNAUTHORIZED")) {
+        res.status(401).send({ message: `Ocurrió el siguiente error de autorización: ${error}` });
+      } else if (error.startsWith("FORBIDDEN")) {
+        res.status(403).send({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
+      } else if (error.startsWith("NOT FOUND")) {
+        res.status(404).send({ message: `Ocurrió el siguiente error de localización: ${error}` });
+      } else if (error.startsWith("CONFLICT")) {
+        res.status(409).send({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
+      } else {
+        res.status(500).send({ message: `Ocurrió el siguiente error: ${error}` });
+      }
+    } else {
+      res.status(500).send({ message: `Ocurrió el siguiente error: ${error}` });
+    }
+  }
+});
+
+app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, res: express.Response) => { 
+  try {
+    let supabase;
+
+    let accessToken: string;
+
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+      console.log("ENTORNO: PRODUCCIÓN");
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+      // Obtener el token del encabezado de autorización
+      const authHeader = req.headers.authorization || "";
+      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+
+      if (!accessToken) {
+        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+      }
+
+      // Establecer el token de autenticación en el cliente de Supabase
+      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        return res.status(401).json({ error: 'Token de autorización inválido' });
+      }
+
+    } else {
+      console.log("ENTORNO: DESARROLLO");
+      supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    }
+
+    // Obtener la lista de IDs desde el body de la solicitud
+    const { ids, liquidator_id, caso_id, client_id } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw "BAD REQUEST: No se proporcionaron IDs válidos";
+    }
+
+    if (!caso_id) {
+      throw "BAD REQUEST: No se proporcionó caso_id";
+    }
+
+    if (!client_id) {
+      throw "BAD REQUEST: No se proporcionó client_id";
+    }
+
+    if (!liquidator_id) {
+      throw "BAD REQUEST: No se proporcionó liquidator_id";
     }
 
     // Obtener el nombre del caso desde client_casos
@@ -321,13 +633,13 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
     const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
 
     // Generar el código base concatenado
-    const codigoBase = `CCIL-${ruc_cliente}-${fechaFormateada}`;
+    const codigoBase = `CCCL-${ruc_cliente}-${fechaFormateada}`;
 
     // Buscar registros que coincidan con el prefijo en la tabla caja_chica_liq_internal
     const { data: cajaChicaLiqExistentes, error: cajaChicaLiqError } = await supabase
-      .from("caja_chica_liq_internal")
-      .select("int_liq_code")
-      .like("int_liq_code", `${codigoBase}%`);
+      .from("caja_chica_liq_client")
+      .select("client_liq_code")
+      .like("client_liq_code", `${codigoBase}%`);
 
     if (cajaChicaLiqError) {
       throw cajaChicaLiqError;
@@ -344,7 +656,8 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
     const { data: cajaChicaReg, error: cajaChicaRegError } = await supabase
       .from("caja_chica_registros")
       .select("*")
-      .filter("internal_liquidation", "eq", false)
+      .filter("internal_liquidation", "eq", true)
+      .filter("client_liquidation", "eq", false)
       .in("id", ids);
 
 
@@ -353,7 +666,7 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
     }
 
     if (!cajaChicaReg || cajaChicaReg.length === 0) {
-      throw "NOT FOUND: No se encontraron datos";
+      throw "NOT FOUND: No se encontraron datos o aún no ha hecho la liquidación interna de alguno de los registros";
     }
 
     // Obtener los nombres de usuario correspondientes
@@ -433,33 +746,24 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
     // Convierte el ArrayBuffer en un Uint8Array
     const logo = new Uint8Array(arrayBuffer);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, nombre_caso, codigoFinal, "caja_chica_internal", allSoportes));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_cliente", nombre_caso, allSoportes));
 
     // Calcular duration_total y value_total
     const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
 
-    let userId = null;
-    try {
-      const { data } = await supabase.auth.getUser(token);
-      userId = data.user?.id ?? null;
-    } catch (error) {
-      console.error("Error al obtener el ID de usuario:", error);
-      // Aquí se establece userId en null en caso de error.
-    }
     const { data: newLiqData, error: newLiqError } = await supabase
-      .from("caja_chica_liq_internal")
+      .from("caja_chica_liq_client")
       .insert([
         {
-          liquidation_value: value_total,
+          caso_id: caso_id,
+          client_id: client_id,
+          client_liq_code: codigoFinal,
           user_id_liquidator: liquidator_id,
-          int_liq_code: codigoFinal,
-          user_id: userId
+          value: value_total,
         }
       ])
       .select()
       .single();
-
-      console.log(newLiqData);
 
     if (newLiqError) {
       throw newLiqError;
@@ -472,8 +776,8 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
     const { error: updateError } = await supabase
       .from("caja_chica_registros")
       .update({
-        internal_liquidation: true,
-        internal_liquidation_id: newLiqId
+        client_liquidation: true,
+        client_liquidation_id: newLiqId
       })
       .in("id", ids);
 
@@ -507,57 +811,6 @@ app.post('/reportePDF/reportePDFCajaChicaInt', async (req: express.Request, res:
   }
 });
 
-app.post('/reportePDF/reportePDFCajaChicaExt', async (req: express.Request, res: express.Response) => { 
-  try {
-    let supabase;
-
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
-      console.log("ENTORNO: PRODUCCIÓN");
-      const authHeader = req.headers.authorization || "";
-      const token = authHeader.replace('Bearer ', '');
-      if (!token) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
-      }
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      });
-    } else {
-      console.log("ENTORNO: DESARROLLO");
-      supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      })
-    }
-
-    console.log("OK");
-    res.status(201).send("Hola Mundo");
-  } catch (error) {
-    if (typeof error === "string") {
-      if (error.startsWith("BAD REQUEST")) {
-        res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
-      } else if (error.startsWith("UNAUTHORIZED")) {
-        res.status(401).json({ message: `Ocurrió el siguiente error de autorización: ${error}` });
-      } else if (error.startsWith("FORBIDDEN")) {
-        res.status(403).json({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
-      } else if (error.startsWith("NOT FOUND")) {
-        res.status(404).json({ message: `Ocurrió el siguiente error de localización: ${error}` });
-      } else if (error.startsWith("CONFLICT")) {
-        res.status(409).json({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
-      } else {
-        res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
-      }
-    } else {
-      res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
-    }
-  }
-});
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
@@ -570,9 +823,10 @@ type RowData = {
   duracion?: string | null;
   valor: string | null;
   cliente?: string | null
+  caso?: string | null
 };
 
-async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: string, codigo: string, tipoLiq: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
+async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
   const pdfDoc = await PDFDocument.create();
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold); // Fuente en negritas
@@ -621,21 +875,23 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: st
     color: rgb(0, 0, 0),
   });
 
-  page.drawText('CASO:', {
-    x: 235, // Espacio considerable a la derecha de "CÓDIGO:"
-    y: height - 160,
-    size: fontSize,
-    font: helveticaFont,
-    color: rgb(0.737, 0.549, 0.361),
-  });
-
-  page.drawText(nombre_caso, {
-    x: 235, // Debajo de "CASO:", alinear a la derecha con un espacio considerable
-    y: height - 180,
-    size: fontSize,
-    font: helveticaFont,
-    color: rgb(0, 0, 0),
-  });
+  if (nombre_caso) {
+    page.drawText('CASO:', {
+      x: 235, // Espacio considerable a la derecha de "CÓDIGO:"
+      y: height - 160,
+      size: fontSize,
+      font: helveticaFont,
+      color: rgb(0.737, 0.549, 0.361),
+    });
+  
+    page.drawText(nombre_caso, {
+      x: 235, // Debajo de "CASO:", alinear a la derecha con un espacio considerable
+      y: height - 180,
+      size: fontSize,
+      font: helveticaFont,
+      color: rgb(0, 0, 0),
+    });
+  }
 
   // Tabla de datos
   const tableTop = height - 210;
@@ -646,28 +902,30 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, nombre_caso: st
   let headers: { label: string, key: keyof RowData }[];
   let columnWidths: number[];
 
-  if (tipoLiq == "caja_chica_internal") {
+  if (tipoLiq == "caja_chica_interna") {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
-      { label: 'Nombre Usuario', key: 'nombre_usuario' },
+      { label: 'Usuario', key: 'nombre_usuario' },
       { label: 'Valor', key: 'valor' },
+      { label: 'Cliente', key: 'cliente' },
+      { label: 'Caso', key: 'caso' },
     ];
 
-    columnWidths = [100, 170, 170, 100]; // Anchos de columna
+    columnWidths = [80, 140, 120, 50, 80, 80]; // Anchos de columna
   } else if (tipoLiq == "caja_chica_cliente") {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
-      { label: 'Nombre Usuario', key: 'nombre_usuario' },
-      { label: 'Duración', key: 'duracion' },
+      { label: 'Usuario', key: 'nombre_usuario' },
       { label: 'Valor', key: 'valor' },
     ];
+    columnWidths = [100, 170, 170, 100]; // Anchos de columna
   } else {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
-      { label: 'Nombre Usuario', key: 'nombre_usuario' },
+      { label: 'Usuario', key: 'nombre_usuario' },
       { label: 'Valor', key: 'valor' },
       { label: 'Cliente', key: 'cliente'}
     ];

@@ -60,30 +60,41 @@ app.use((req, res, next) => {
 
 app.post('/signUp', async (req: express.Request, res: express.Response) => {  
   try {
+    res.setHeader('Content-Type', 'application/json');
+
     let supabase;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
+    let accessToken: string;
+
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
       console.log("ENTORNO: PRODUCCIÓN");
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+      // Obtener el token del encabezado de autorización
       const authHeader = req.headers.authorization || "";
-      const token = authHeader.replace('Bearer ', '');
-      if (!token) {
+      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+
+      if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      });
+
+      // Establecer el token de autenticación en el cliente de Supabase
+      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        return res.status(401).json({ error: 'Token de autorización inválido' });
+      }
+
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
         auth: {
           autoRefreshToken: false,
           persistSession: false
-        }}
-      )
+        }
+      })
     }
     const body = req.body;
     const saltRounds = 10;
@@ -204,24 +215,24 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
     }
 
     console.log("OK");
-    res.status(201).json({ message: "Usuario creado correctamente." });
+    res.status(201).send({ message: "Usuario creado correctamente." });
   } catch (error) {
     if (typeof error === "string") {
       if (error.startsWith("BAD REQUEST")) {
-        res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
+        res.status(400).send({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
       } else if (error.startsWith("UNAUTHORIZED")) {
-        res.status(401).json({ message: `Ocurrió el siguiente error de autorización: ${error}` });
+        res.status(401).send({ message: `Ocurrió el siguiente error de autorización: ${error}` });
       } else if (error.startsWith("FORBIDDEN")) {
-        res.status(403).json({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
+        res.status(403).send({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
       } else if (error.startsWith("NOT FOUND")) {
-        res.status(404).json({ message: `Ocurrió el siguiente error de localización: ${error}` });
+        res.status(404).send({ message: `Ocurrió el siguiente error de localización: ${error}` });
       } else if (error.startsWith("CONFLICT")) {
-        res.status(409).json({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
+        res.status(409).send({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
       } else {
-        res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+        res.status(500).send({ message: `Ocurrió el siguiente error: ${error}` });
       }
     } else {
-      res.status(500).json({ message: `Ocurrió el siguiente error: ${error}` });
+      res.status(500).send({ message: `Ocurrió el siguiente error: ${error}` });
     }
   }
 })
