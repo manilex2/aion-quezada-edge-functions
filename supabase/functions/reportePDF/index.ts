@@ -46,7 +46,7 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
 
     let accessToken: string;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
       // Obtener el token del encabezado de autorización
@@ -266,7 +266,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
 
     let accessToken: string;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
       // Obtener el token del encabezado de autorización
@@ -553,7 +553,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
 
     let accessToken: string;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
       // Obtener el token del encabezado de autorización

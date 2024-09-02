@@ -52,7 +52,7 @@ app.put('/password/changePassword', async (req: express.Request, res: express.Re
 
     let accessToken: string;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
       // Obtener el token del encabezado de autorización
@@ -143,7 +143,7 @@ app.post('/password/forgotPassword', async (req: express.Request, res: express.R
 
     let accessToken: string;
 
-    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY")) {
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
         auth: {
