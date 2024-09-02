@@ -217,22 +217,23 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
     console.log("OK");
     res.status(201).send({ message: "Usuario creado correctamente." });
   } catch (error) {
+    const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
       if (error.startsWith("BAD REQUEST")) {
-        res.status(400).send({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${error}` });
+        res.status(400).send({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${errorJSON}` });
       } else if (error.startsWith("UNAUTHORIZED")) {
-        res.status(401).send({ message: `Ocurrió el siguiente error de autorización: ${error}` });
+        res.status(401).send({ message: `Ocurrió el siguiente error de autorización: ${errorJSON}` });
       } else if (error.startsWith("FORBIDDEN")) {
-        res.status(403).send({ message: `Ocurrió el siguiente error de prohibición: ${error}` });
+        res.status(403).send({ message: `Ocurrió el siguiente error de prohibición: ${errorJSON}` });
       } else if (error.startsWith("NOT FOUND")) {
-        res.status(404).send({ message: `Ocurrió el siguiente error de localización: ${error}` });
+        res.status(404).send({ message: `Ocurrió el siguiente error de localización: ${errorJSON}` });
       } else if (error.startsWith("CONFLICT")) {
-        res.status(409).send({ message: `Ocurrió el siguiente error de conflictos: ${error}` });
+        res.status(409).send({ message: `Ocurrió el siguiente error de conflictos: ${errorJSON}` });
       } else {
-        res.status(500).send({ message: `Ocurrió el siguiente error: ${error}` });
+        res.status(500).send({ message: `Ocurrió el siguiente error: ${errorJSON}` });
       }
     } else {
-      res.status(500).send({ message: `Ocurrió el siguiente error: ${error}` });
+      res.status(500).send({ message: `Ocurrió el siguiente error: ${errorJSON}` });
     }
   }
 })
