@@ -48,20 +48,20 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
 
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-      // Obtener el token del encabezado de autorización
-      const authHeader = req.headers.authorization || "";
-      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: { Authorization: req.headers.authorization! }
+        }
+      });
+      // Primero tomar el token del header de autorizacion
+      accessToken = req.headers.authorization!.replace('Bearer ', '')
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser(accessToken);
 
       if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-
-      // Establecer el token de autenticación en el cliente de Supabase
-      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
-
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser();
 
       if (error || !user) {
         throw 'UNAUTHORIZED: Token de autorización inválido.';
@@ -198,6 +198,21 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
     const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
 
+    // Subir el PDF a Supabase Storage
+    const bucketName = 'files';
+    const filePath = `clientes/${ruc_cliente}/registros_facturables_liquidaciones/${codigoFinal}.pdf`;
+
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(filePath, pdfBuffer, {
+        contentType: 'application/pdf'
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
     // Insertar el nuevo registro en reg_facturable_liq
     const { data: newLiqData, error: newLiqError } = await supabase
       .from("reg_facturable_liq")
@@ -209,6 +224,7 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
           value_total: value_total,
           user_id_liquidator: liquidator_id,
           liq_code: codigoFinal,
+          pdf_url: uploadData.fullPath
         }
       ])
       .select()
@@ -233,30 +249,39 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
       throw updateError;
     }
 
-    // Responder con el PDF
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=liquidacion.pdf');
+    // Generar una URL firmada para el archivo PDF
+    const { data: signedUrl, error: signedUrlError } = await supabase
+      .storage
+      .from(bucketName)
+      .createSignedUrl(filePath, 3600); // URL válida por 3600 segundos
+
+    if (signedUrlError) {
+      throw signedUrlError;
+    }
+
+    // Responder con la URL firmada
+    res.setHeader('Content-Type', 'application/json');
     console.log("OK");
-    res.status(201).send(pdfBuffer);
+    res.status(201).send({ message: signedUrl.signedUrl });
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
       if (error.startsWith("BAD REQUEST")) {
-        res.status(400).json({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${errorJSON}` });
+        res.status(400).send({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${errorJSON}` });
       } else if (error.startsWith("UNAUTHORIZED")) {
-        res.status(401).json({ message: `Ocurrió el siguiente error de autorización: ${errorJSON}` });
+        res.status(401).send({ message: `Ocurrió el siguiente error de autorización: ${errorJSON}` });
       } else if (error.startsWith("FORBIDDEN")) {
-        res.status(403).json({ message: `Ocurrió el siguiente error de prohibición: ${errorJSON}` });
+        res.status(403).send({ message: `Ocurrió el siguiente error de prohibición: ${errorJSON}` });
       } else if (error.startsWith("NOT FOUND")) {
-        res.status(404).json({ message: `Ocurrió el siguiente error de localización: ${errorJSON}` });
+        res.status(404).send({ message: `Ocurrió el siguiente error de localización: ${errorJSON}` });
       } else if (error.startsWith("CONFLICT")) {
-        res.status(409).json({ message: `Ocurrió el siguiente error de conflictos: ${errorJSON}` });
+        res.status(409).send({ message: `Ocurrió el siguiente error de conflictos: ${errorJSON}` });
       } else {
-        res.status(500).json({ message: `Ocurrió el siguiente error: ${errorJSON}` });
+        res.status(500).send({ message: `Ocurrió el siguiente error: ${errorJSON}` });
       }
     } else {
-      res.status(500).json({ message: `Ocurrió el siguiente error: ${errorJSON}` });
+      res.status(500).send({ message: `Ocurrió el siguiente error: ${errorJSON}` });
     }
   }
 });
@@ -269,21 +294,21 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
 
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-      // Obtener el token del encabezado de autorización
-      const authHeader = req.headers.authorization || "";
-      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: { Authorization: req.headers.authorization! }
+        }
+      });
+      // Primero tomar el token del header de autorizacion
+      accessToken = req.headers.authorization!.replace('Bearer ', '')
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser(accessToken);
 
       if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-
-      // Establecer el token de autenticación en el cliente de Supabase
-      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
-
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser();
-
+      
       if (error || !user) {
         throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
@@ -335,7 +360,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
     const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
 
     // Generar el código base concatenado
-    const codigoBase = `CCIL-${user_id}-${fechaFormateada}`;
+    const codigoBase = `CCIL-${fechaFormateada}`;
 
     // Buscar registros que coincidan con el prefijo en la tabla caja_chica_liq_internal
     const { data: cajaChicaLiqExistentes, error: cajaChicaLiqError } = await supabase
@@ -464,6 +489,22 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
     if (cajaChicaLiqError) {
       throw cajaChicaSaldosError;
     }
+
+    // Subir el PDF a Supabase Storage
+    const bucketName = 'files';
+    const filePath = `files/${user_id}/caja_chica_interna_liquidaciones/${codigoFinal}.pdf`;
+
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(filePath, pdfBuffer, {
+        contentType: 'application/pdf'
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
     const { data: newLiqData, error: newLiqError } = await supabase
       .from("caja_chica_liq_internal")
       .insert([
@@ -474,7 +515,8 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
           user_id: user_id,
           initial_balance: cajaChicaSaldos? cajaChicaSaldos.available_balance : 0,
           final_balance: cajaChicaSaldos? cajaChicaSaldos.available_balance? cajaChicaSaldos.available_balance + value_total : 0 : 0,
-          refund: value_total
+          refund: value_total,
+          pdf_url: uploadData.fullPath
         }
       ])
       .select()
@@ -521,11 +563,20 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
         throw updateCajaChicaSaldosError;
     }
 
-    // Responder con el PDF
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=liquidacion.pdf');
+    // Generar una URL firmada para el archivo PDF
+    const { data: signedUrl, error: signedUrlError } = await supabase
+      .storage
+      .from(bucketName)
+      .createSignedUrl(filePath, 3600); // URL válida por 3600 segundos
+
+    if (signedUrlError) {
+      throw signedUrlError;
+    }
+
+    // Responder con la URL firmada
+    res.setHeader('Content-Type', 'application/json');
     console.log("OK");
-    res.status(201).send(pdfBuffer);
+    res.status(201).send({ message: signedUrl.signedUrl });
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
     const errorJSON = JSON.stringify(error);
@@ -557,21 +608,21 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
 
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-      // Obtener el token del encabezado de autorización
-      const authHeader = req.headers.authorization || "";
-      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: { Authorization: req.headers.authorization! }
+        }
+      });
+      // Primero tomar el token del header de autorizacion
+      accessToken = req.headers.authorization!.replace('Bearer ', '')
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser(accessToken);
 
       if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-
-      // Establecer el token de autenticación en el cliente de Supabase
-      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
-
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser();
-
+      
       if (error || !user) {
         throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
@@ -753,6 +804,21 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
     // Calcular duration_total y value_total
     const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
 
+    // Subir el PDF a Supabase Storage
+    const bucketName = 'files';
+    const filePath = `clientes/${ruc_cliente}/caja_chica_cliente_liquidaciones/${codigoFinal}.pdf`;
+
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(filePath, pdfBuffer, {
+        contentType: 'application/pdf'
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
     const { data: newLiqData, error: newLiqError } = await supabase
       .from("caja_chica_liq_client")
       .insert([
@@ -762,6 +828,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
           client_liq_code: codigoFinal,
           user_id_liquidator: liquidator_id,
           value: value_total,
+          pdf_url: uploadData.fullPath,
         }
       ])
       .select()
@@ -787,11 +854,20 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
       throw updateError;
     }
 
-    // Responder con el PDF
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=liquidacion.pdf');
+    // Generar una URL firmada para el archivo PDF
+    const { data: signedUrl, error: signedUrlError } = await supabase
+      .storage
+      .from(bucketName)
+      .createSignedUrl(filePath, 3600); // URL válida por 3600 segundos
+
+    if (signedUrlError) {
+      throw signedUrlError;
+    }
+
+    // Responder con la URL firmada
+    res.setHeader('Content-Type', 'application/json');
     console.log("OK");
-    res.status(201).send(pdfBuffer);
+    res.status(201).send({ message: signedUrl.signedUrl });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {

@@ -68,21 +68,21 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
 
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-      // Obtener el token del encabezado de autorización
-      const authHeader = req.headers.authorization || "";
-      accessToken = authHeader.split(' ')[1]; // Asumiendo que el token viene como "Bearer <token>"
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: {
+          headers: { Authorization: req.headers.authorization! }
+        }
+      });
+      // Primero tomar el token del header de autorizacion
+      accessToken = req.headers.authorization!.replace('Bearer ', '')
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser(accessToken);
 
       if (!accessToken) {
         throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
       }
-
-      // Establecer el token de autenticación en el cliente de Supabase
-      supabase.auth.setSession({access_token: accessToken, refresh_token: ''});
-
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser();
-
+      
       if (error || !user) {
         throw 'UNAUTHORIZED: Token de autorización inválido.';
       }
