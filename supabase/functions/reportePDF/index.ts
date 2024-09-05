@@ -192,11 +192,11 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     // Convierte el ArrayBuffer en un Uint8Array
     const logo = new Uint8Array(arrayBuffer);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "", nombre_caso));
-
     // Calcular duration_total y value_total
     const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
     const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
+
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "", value_total, nombre_caso));
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
@@ -475,10 +475,10 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
     // Convierte el ArrayBuffer en un Uint8Array
     const logo = new Uint8Array(arrayBuffer);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_interna", undefined, allSoportes));
-
     // Calcular duration_total y value_total
     const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
+
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_interna", value_total, undefined, allSoportes));
 
     const { data: cajaChicaSaldos, error: cajaChicaSaldosError} = await supabase
       .from("caja_chica_saldos")
@@ -799,10 +799,10 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
     // Convierte el ArrayBuffer en un Uint8Array
     const logo = new Uint8Array(arrayBuffer);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_cliente", nombre_caso, allSoportes));
-
     // Calcular duration_total y value_total
     const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
+
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_cliente", value_total, nombre_caso, allSoportes));
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
@@ -905,7 +905,7 @@ type RowData = {
   caso?: string | null
 };
 
-async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
+async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, valor_total: number, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
   const pdfDoc = await PDFDocument.create();
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold); // Fuente en negritas
@@ -928,8 +928,8 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     height: logoDims.height,
   });
 
-  // Título: "LIQUIDACIÓN DE HONORARIOS PROFESIONALES"
-  page.drawText('LIQUIDACIÓN DE HONORARIOS PROFESIONALES', {
+  // Título: "LIQUIDACIÓN DE GASTOS REEMBOLSABLES"
+  page.drawText('LIQUIDACIÓN DE GASTOS REEMBOLSABLES', {
     x: 35, // Justo a la derecha del logo, con un espacio adicional
     y: height - 130, // Ajuste vertical para estar alineado con la parte superior del logo
     size: fontSize,
@@ -972,8 +972,24 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     });
   }
 
+  page.drawText('VALOR TOTAL DE LIQUIDACIÓN:', {
+    x: 35,
+    y: height - 200,
+    size: fontSize,
+    font: helveticaFont,
+    color: rgb(0.737, 0.549, 0.361),
+  });
+
+  page.drawText(`$${valor_total.toFixed(2)}`, {
+    x: 35,
+    y: height - 220,
+    size: fontSize,
+    font: helveticaFont,
+    color: rgb(0, 0, 0),
+  });
+
   // Tabla de datos
-  const tableTop = height - 210;
+  const tableTop = height - 240;
   const tableLeft = 35;
   const rowHeight = 20;
   let yPosition = tableTop;
@@ -1124,7 +1140,9 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
       page = pdfDoc.addPage(PageSizes.Letter);
       if (soportes[count].tipo.toLowerCase() === 'pdf') {
         const [pdffile] = await pdfDoc.embedPdf(soportes[count].soporte);
-        page.drawPage(pdffile);
+        page.drawPage(pdffile, {
+          width: page.getWidth() / 1.1,
+        });
       } else if (soportes[count].tipo.toLowerCase() === 'png') {
         const pngImage = await pdfDoc.embedPng(soportes[count].soporte);
         const pngDims = pngImage.scale(0.3);
