@@ -197,12 +197,13 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
 
     const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "", value_total, nombre_caso));
+    const pdfBuffer2 = Buffer.from(await createPdf(data, logo, codigoFinal, "reg_facturable_cliente", value_total, nombre_caso));
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
     const filePath = `clientes/${ruc_cliente}/registros_facturables_liquidaciones/${codigoFinal}.pdf`;
 
-    const { data: uploadData, error: uploadError } = await supabase
+    /* const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from(bucketName)
       .upload(filePath, pdfBuffer, {
@@ -262,7 +263,10 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     // Responder con la URL firmada
     res.setHeader('Content-Type', 'application/json');
     console.log("OK");
-    res.status(201).send({ message: signedUrl.signedUrl });
+    res.status(201).send({ message: signedUrl.signedUrl }); */
+    res.setHeader('Content-Type', 'application/pdf');
+    console.log("OK");
+    res.status(201).send(pdfBuffer2);
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
     const errorJSON = JSON.stringify(error);
@@ -901,8 +905,14 @@ type RowData = {
   nombre_usuario: string | null;
   duracion?: string | null;
   valor: string | null;
-  cliente?: string | null
-  caso?: string | null
+  cliente?: string | null;
+  caso?: string | null;
+  inicio?: string | null;
+  final?: string | null;
+  horasTrabajadas?: string | null;
+  horasFacturables?: string | null;
+  tarifaHora?: string | null;
+  valorTrabajo?: string | null;
 };
 
 async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, valor_total: number, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
@@ -914,10 +924,15 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
   const logoImage = await pdfDoc.embedPng(logoBytes);
   const logoDims = logoImage.scale(0.15); // Escalar la imagen si es necesario
 
-  let page = pdfDoc.addPage(PageSizes.Letter);
+  let page: PDFPage;
+  if (tipoLiq == "reg_facturable_cliente") {
+    page = pdfDoc.addPage([792, 612]);
+  } else {
+    page = pdfDoc.addPage(PageSizes.Letter);
+  }
   const { width, height } = page.getSize();
-  const fontSize = 12;
-  const footerFontSize = 10;
+  const fontSize = 10;
+  const footerFontSize = 8;
   const footerMargin = 10; // Margen adicional entre el contenido y el pie de página
 
   // Dibujar el logo en la esquina superior izquierda
@@ -1006,7 +1021,6 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
       { label: 'Cliente', key: 'cliente' },
       { label: 'Caso', key: 'caso' },
     ];
-
     columnWidths = [80, 140, 120, 50, 80, 80]; // Anchos de columna
   } else if (tipoLiq == "caja_chica_cliente") {
     headers = [
@@ -1016,16 +1030,28 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
       { label: 'Valor', key: 'valor' },
     ];
     columnWidths = [100, 170, 170, 100]; // Anchos de columna
-  } else {
+  } else if (tipoLiq == "reg_facturable_cliente") {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
       { label: 'Usuario', key: 'nombre_usuario' },
-      { label: 'Valor', key: 'valor' },
-      { label: 'Cliente', key: 'cliente'}
+      { label: 'Hora de inicio', key: 'inicio' },
+      { label: 'Hora de termino', key: 'final' },
+      { label: 'Horas trabajadas', key: 'horasTrabajadas' },
+      { label: 'Horas facturables', key: 'horasFacturables' },
+      { label: 'Tarifa por hora', key: 'tarifaHora' },
+      { label: 'Valor trabajo', key: 'valorTrabajo' },
     ];
-
-    columnWidths = [80, 150, 150, 80, 80]; // Anchos de columna
+    columnWidths = [66, 115, 98, 41, 66, 66, 82, 82, 82];
+  } else {
+    headers = [
+      { label: 'Fecha', key: 'fecha' },
+      { label: 'Descripción', key: 'descripcion' },
+      { label: 'Nombre', key: 'nombre_usuario' },
+      { label: 'Duración', key: 'duracion'},
+      { label: 'Valor', key: 'valor' },
+    ];
+    columnWidths = [100, 140, 100, 100, 100]; // Anchos de columna
   }
 
   headers.forEach((header, i) => {
@@ -1178,7 +1204,7 @@ function formatDate(timestamp: string | null): string | null {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
   const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 }
 
 // Función para formatear la duración en "X horas X minutos"

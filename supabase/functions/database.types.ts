@@ -19,10 +19,12 @@ export type Database = {
           end_date_planned: string | null
           end_date_real: string | null
           id: string
+          order: number | null
           register_by_email: string | null
           register_by_id: string | null
           responsible_id: string | null
           start_date: string | null
+          start_date_planned: string | null
           termino: number | null
           tramite_id: string | null
         }
@@ -35,10 +37,12 @@ export type Database = {
           end_date_planned?: string | null
           end_date_real?: string | null
           id?: string
+          order?: number | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
           start_date?: string | null
+          start_date_planned?: string | null
           termino?: number | null
           tramite_id?: string | null
         }
@@ -51,10 +55,12 @@ export type Database = {
           end_date_planned?: string | null
           end_date_real?: string | null
           id?: string
+          order?: number | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
           start_date?: string | null
+          start_date_planned?: string | null
           termino?: number | null
           tramite_id?: string | null
         }
@@ -104,11 +110,11 @@ export type Database = {
           created_at: string
           end_date_planned: string | null
           end_date_real: string | null
+          end_date_reschedule: string | null
           id: string
           register_by_email: string | null
           register_by_id: string | null
           responsible_id: string | null
-          start_date: string | null
           status: string | null
         }
         Insert: {
@@ -118,11 +124,11 @@ export type Database = {
           created_at?: string
           end_date_planned?: string | null
           end_date_real?: string | null
+          end_date_reschedule?: string | null
           id?: string
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
-          start_date?: string | null
           status?: string | null
         }
         Update: {
@@ -132,11 +138,11 @@ export type Database = {
           created_at?: string
           end_date_planned?: string | null
           end_date_real?: string | null
+          end_date_reschedule?: string | null
           id?: string
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
-          start_date?: string | null
           status?: string | null
         }
         Relationships: [
@@ -171,6 +177,7 @@ export type Database = {
           client_id: string | null
           created_at: string
           file_name: string | null
+          file_path: string | null
           file_type: string | null
           file_url: string | null
           id: string
@@ -185,6 +192,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           file_name?: string | null
+          file_path?: string | null
           file_type?: string | null
           file_url?: string | null
           id?: string
@@ -199,6 +207,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           file_name?: string | null
+          file_path?: string | null
           file_type?: string | null
           file_url?: string | null
           id?: string
@@ -251,42 +260,81 @@ export type Database = {
           },
         ]
       }
+      actividades_dependencies: {
+        Row: {
+          created_at: string
+          current_activity: string | null
+          id: string
+          prev_activity: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_activity?: string | null
+          id?: string
+          prev_activity?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_activity?: string | null
+          id?: string
+          prev_activity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actividades_dependencies_current_activity_fkey"
+            columns: ["current_activity"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_dependencies_prev_activity_fkey"
+            columns: ["prev_activity"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caja_chica_liq_client: {
         Row: {
           bill_support: string | null
-          caso_id: string | null
-          client_id: string | null
-          client_liq_code: string | null
+          caso_id: string
+          client_id: string
+          client_liq_code: string
           created_at: string
           id: string
           max_payment_day: string | null
           payment_support: string | null
-          user_id_liquidator: string | null
-          value: number | null
+          pdf_url: string | null
+          user_id_liquidator: string
+          value: number
         }
         Insert: {
           bill_support?: string | null
-          caso_id?: string | null
-          client_id?: string | null
-          client_liq_code?: string | null
+          caso_id: string
+          client_id: string
+          client_liq_code: string
           created_at?: string
           id?: string
           max_payment_day?: string | null
           payment_support?: string | null
-          user_id_liquidator?: string | null
-          value?: number | null
+          pdf_url?: string | null
+          user_id_liquidator: string
+          value: number
         }
         Update: {
           bill_support?: string | null
-          caso_id?: string | null
-          client_id?: string | null
-          client_liq_code?: string | null
+          caso_id?: string
+          client_id?: string
+          client_liq_code?: string
           created_at?: string
           id?: string
           max_payment_day?: string | null
           payment_support?: string | null
-          user_id_liquidator?: string | null
-          value?: number | null
+          pdf_url?: string | null
+          user_id_liquidator?: string
+          value?: number
         }
         Relationships: [
           {
@@ -315,42 +363,45 @@ export type Database = {
       caja_chica_liq_internal: {
         Row: {
           created_at: string
-          final_balance: number | null
+          final_balance: number
           id: string
-          initial_balance: number | null
-          int_liq_code: string | null
-          liquidation_value: number | null
+          initial_balance: number
+          int_liq_code: string
+          liquidation_value: number
           payment_date: string | null
           payment_support: string | null
-          refund: number | null
+          pdf_url: string | null
+          refund: number
           user_id: string | null
-          user_id_liquidator: string | null
+          user_id_liquidator: string
         }
         Insert: {
           created_at?: string
-          final_balance?: number | null
+          final_balance?: number
           id?: string
-          initial_balance?: number | null
-          int_liq_code?: string | null
-          liquidation_value?: number | null
+          initial_balance?: number
+          int_liq_code: string
+          liquidation_value?: number
           payment_date?: string | null
           payment_support?: string | null
-          refund?: number | null
+          pdf_url?: string | null
+          refund?: number
           user_id?: string | null
-          user_id_liquidator?: string | null
+          user_id_liquidator: string
         }
         Update: {
           created_at?: string
-          final_balance?: number | null
+          final_balance?: number
           id?: string
-          initial_balance?: number | null
-          int_liq_code?: string | null
-          liquidation_value?: number | null
+          initial_balance?: number
+          int_liq_code?: string
+          liquidation_value?: number
           payment_date?: string | null
           payment_support?: string | null
-          refund?: number | null
+          pdf_url?: string | null
+          refund?: number
           user_id?: string | null
-          user_id_liquidator?: string | null
+          user_id_liquidator?: string
         }
         Relationships: [
           {
@@ -371,25 +422,25 @@ export type Database = {
       }
       caja_chica_reg_detail: {
         Row: {
-          caja_chica_id: string | null
+          caja_chica_id: string
           created_at: string
-          details: string | null
+          details: string
           id: string
-          register_by_id: string | null
+          register_by_id: string
         }
         Insert: {
-          caja_chica_id?: string | null
+          caja_chica_id: string
           created_at?: string
-          details?: string | null
+          details: string
           id?: string
-          register_by_id?: string | null
+          register_by_id?: string
         }
         Update: {
-          caja_chica_id?: string | null
+          caja_chica_id?: string
           created_at?: string
-          details?: string | null
+          details?: string
           id?: string
-          register_by_id?: string | null
+          register_by_id?: string
         }
         Relationships: [
           {
@@ -410,52 +461,49 @@ export type Database = {
       }
       caja_chica_registros: {
         Row: {
-          caso_id: string | null
-          client_id: string | null
-          client_liquidation: boolean | null
+          caso_id: string
+          client_id: string
+          client_liquidation: boolean
           client_liquidation_id: string | null
-          concept: string | null
+          concept: string
           created_at: string
-          date: string | null
+          date: string
           id: string
-          internal_liquidation: boolean | null
+          internal_liquidation: boolean
           internal_liquidation_id: string | null
-          process_id: string | null
-          register_by_email: string | null
-          register_by_id: string | null
-          value: number | null
+          register_by_email: string
+          register_by_id: string
+          value: number
         }
         Insert: {
-          caso_id?: string | null
-          client_id?: string | null
-          client_liquidation?: boolean | null
+          caso_id: string
+          client_id: string
+          client_liquidation?: boolean
           client_liquidation_id?: string | null
-          concept?: string | null
+          concept: string
           created_at?: string
-          date?: string | null
+          date: string
           id?: string
-          internal_liquidation?: boolean | null
+          internal_liquidation?: boolean
           internal_liquidation_id?: string | null
-          process_id?: string | null
-          register_by_email?: string | null
-          register_by_id?: string | null
-          value?: number | null
+          register_by_email: string
+          register_by_id?: string
+          value: number
         }
         Update: {
-          caso_id?: string | null
-          client_id?: string | null
-          client_liquidation?: boolean | null
+          caso_id?: string
+          client_id?: string
+          client_liquidation?: boolean
           client_liquidation_id?: string | null
-          concept?: string | null
+          concept?: string
           created_at?: string
-          date?: string | null
+          date?: string
           id?: string
-          internal_liquidation?: boolean | null
+          internal_liquidation?: boolean
           internal_liquidation_id?: string | null
-          process_id?: string | null
-          register_by_email?: string | null
-          register_by_id?: string | null
-          value?: number | null
+          register_by_email?: string
+          register_by_id?: string
+          value?: number
         }
         Relationships: [
           {
@@ -484,13 +532,6 @@ export type Database = {
             columns: ["internal_liquidation_id"]
             isOneToOne: false
             referencedRelation: "caja_chica_liq_internal"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "caja_chica_registros_process_id_fkey"
-            columns: ["process_id"]
-            isOneToOne: false
-            referencedRelation: "process"
             referencedColumns: ["id"]
           },
           {
@@ -536,40 +577,40 @@ export type Database = {
       }
       caja_chica_soportes: {
         Row: {
-          caja_chica_id: string | null
-          caso_id: string | null
-          client_id: string | null
+          caja_chica_id: string
+          caso_id: string
+          client_id: string
           created_at: string
-          file_name: string | null
-          file_type: string | null
-          file_url: string | null
+          file_name: string
+          file_type: string
+          file_url: string
           id: string
-          register_by_email: string | null
-          register_by_id: string | null
+          register_by_email: string
+          register_by_id: string
         }
         Insert: {
-          caja_chica_id?: string | null
-          caso_id?: string | null
-          client_id?: string | null
+          caja_chica_id: string
+          caso_id: string
+          client_id: string
           created_at?: string
-          file_name?: string | null
-          file_type?: string | null
-          file_url?: string | null
+          file_name: string
+          file_type: string
+          file_url: string
           id?: string
-          register_by_email?: string | null
-          register_by_id?: string | null
+          register_by_email: string
+          register_by_id?: string
         }
         Update: {
-          caja_chica_id?: string | null
-          caso_id?: string | null
-          client_id?: string | null
+          caja_chica_id?: string
+          caso_id?: string
+          client_id?: string
           created_at?: string
-          file_name?: string | null
-          file_type?: string | null
-          file_url?: string | null
+          file_name?: string
+          file_type?: string
+          file_url?: string
           id?: string
-          register_by_email?: string | null
-          register_by_id?: string | null
+          register_by_email?: string
+          register_by_id?: string
         }
         Relationships: [
           {
@@ -727,6 +768,7 @@ export type Database = {
           registre_by_email: string | null
           responsible_id: string | null
           star_date: string | null
+          start_date_planned: string | null
           termino: number | null
         }
         Insert: {
@@ -743,6 +785,7 @@ export type Database = {
           registre_by_email?: string | null
           responsible_id?: string | null
           star_date?: string | null
+          start_date_planned?: string | null
           termino?: number | null
         }
         Update: {
@@ -759,6 +802,7 @@ export type Database = {
           registre_by_email?: string | null
           responsible_id?: string | null
           star_date?: string | null
+          start_date_planned?: string | null
           termino?: number | null
         }
         Relationships: [
@@ -783,6 +827,20 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_casos_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materia"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_casos_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "process"
+            referencedColumns: ["id"]
+          },
         ]
       }
       client_tramites: {
@@ -796,10 +854,13 @@ export type Database = {
           end_date_real: string | null
           id: string
           institution_id: string | null
+          order: number | null
+          prev_tramite_id: string | null
           register_by_email: string | null
           register_by_id: string | null
           responsible_id: string | null
           start_date: string | null
+          start_date_planned: string | null
           termino: number | null
           tramite_name: string | null
         }
@@ -813,10 +874,13 @@ export type Database = {
           end_date_real?: string | null
           id?: string
           institution_id?: string | null
+          order?: number | null
+          prev_tramite_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
           start_date?: string | null
+          start_date_planned?: string | null
           termino?: number | null
           tramite_name?: string | null
         }
@@ -830,14 +894,24 @@ export type Database = {
           end_date_real?: string | null
           id?: string
           institution_id?: string | null
+          order?: number | null
+          prev_tramite_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
           start_date?: string | null
+          start_date_planned?: string | null
           termino?: number | null
           tramite_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "client_tramites_prev_tramite_id_fkey"
+            columns: ["prev_tramite_id"]
+            isOneToOne: false
+            referencedRelation: "client_tramites"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tramites_caso_id_fkey"
             columns: ["caso_id"]
@@ -941,6 +1015,7 @@ export type Database = {
           client_id: string | null
           created_at: string
           exp_date: string | null
+          file_path: string | null
           file_type: string | null
           file_url: string | null
           habilitantes_name: string | null
@@ -952,6 +1027,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           exp_date?: string | null
+          file_path?: string | null
           file_type?: string | null
           file_url?: string | null
           habilitantes_name?: string | null
@@ -963,6 +1039,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           exp_date?: string | null
+          file_path?: string | null
           file_type?: string | null
           file_url?: string | null
           habilitantes_name?: string | null
@@ -1453,6 +1530,7 @@ export type Database = {
       reg_facturable: {
         Row: {
           activity: string | null
+          activity_id: string | null
           caso_id: string | null
           client_id: string | null
           created_at: string
@@ -1462,7 +1540,7 @@ export type Database = {
           end_date_time: string | null
           hour_value: number | null
           id: string
-          is_liquidated: boolean | null
+          is_liquidated: boolean
           reg_facturable_liq_id: string | null
           register_by_email: string | null
           register_by_id: string | null
@@ -1472,6 +1550,7 @@ export type Database = {
         }
         Insert: {
           activity?: string | null
+          activity_id?: string | null
           caso_id?: string | null
           client_id?: string | null
           created_at?: string
@@ -1481,7 +1560,7 @@ export type Database = {
           end_date_time?: string | null
           hour_value?: number | null
           id?: string
-          is_liquidated?: boolean | null
+          is_liquidated?: boolean
           reg_facturable_liq_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
@@ -1491,6 +1570,7 @@ export type Database = {
         }
         Update: {
           activity?: string | null
+          activity_id?: string | null
           caso_id?: string | null
           client_id?: string | null
           created_at?: string
@@ -1500,7 +1580,7 @@ export type Database = {
           end_date_time?: string | null
           hour_value?: number | null
           id?: string
-          is_liquidated?: boolean | null
+          is_liquidated?: boolean
           reg_facturable_liq_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
@@ -1509,6 +1589,13 @@ export type Database = {
           tramite_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reg_facturable_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reg_facturable_caso_id_fkey"
             columns: ["caso_id"]
@@ -1551,11 +1638,17 @@ export type Database = {
           bill_support: string | null
           caso_id: string | null
           client_id: string | null
+          client_liquidation_path: string | null
+          client_liquidation_url: string | null
           created_at: string
           duration_total: number | null
           id: string
+          internal_liquidation_path: string | null
+          internal_liquidation_url: string | null
           liq_code: string | null
           payment_support: string | null
+          pdf_url: string | null
+          pdf_url_cliente: string | null
           user_id_liquidator: string | null
           value_total: number | null
         }
@@ -1563,11 +1656,17 @@ export type Database = {
           bill_support?: string | null
           caso_id?: string | null
           client_id?: string | null
+          client_liquidation_path?: string | null
+          client_liquidation_url?: string | null
           created_at?: string
           duration_total?: number | null
           id?: string
+          internal_liquidation_path?: string | null
+          internal_liquidation_url?: string | null
           liq_code?: string | null
           payment_support?: string | null
+          pdf_url?: string | null
+          pdf_url_cliente?: string | null
           user_id_liquidator?: string | null
           value_total?: number | null
         }
@@ -1575,11 +1674,17 @@ export type Database = {
           bill_support?: string | null
           caso_id?: string | null
           client_id?: string | null
+          client_liquidation_path?: string | null
+          client_liquidation_url?: string | null
           created_at?: string
           duration_total?: number | null
           id?: string
+          internal_liquidation_path?: string | null
+          internal_liquidation_url?: string | null
           liq_code?: string | null
           payment_support?: string | null
+          pdf_url?: string | null
+          pdf_url_cliente?: string | null
           user_id_liquidator?: string | null
           value_total?: number | null
         }
@@ -1691,6 +1796,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institution"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
