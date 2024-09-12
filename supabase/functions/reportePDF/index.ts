@@ -167,11 +167,15 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
 
     // Construir los datos para el PDF
     const data: RowData[] = regFacturable.map(row => ({
-      fecha: formatDate(row.start_date_time),
-      descripcion: row.details,
+      fecha: formatDate(row.start_date_time)?? "",
+      descripcion: row.details?? "",
       nombre_usuario: row.register_by_id ? userMap.get(row.register_by_id) || "Usuario desconocido" : "Usuario desconocido",
-      duracion: formatDuration(row.duration_to_bill),
-      valor: formatValue(row.total_value),
+      inicio: formatHour(row.start_date_time)?? "",
+      final: formatHour(row.end_date_time)?? "",
+      horasTrabajadas: formatDuration(row.duration_real)?? "",
+      horasFacturables: formatDuration(row.duration_to_bill)?? "",
+      valor: formatValue(row.total_value)?? "",
+      tarifaHora: formatValue(row.hour_value)?? ""
     }));
 
     // Generar el PDF
@@ -196,14 +200,15 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
     const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "", value_total, nombre_caso));
-    const pdfBuffer2 = Buffer.from(await createPdf(data, logo, codigoFinal, "reg_facturable_cliente", value_total, nombre_caso));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "reg_facturable", value_total, nombre_caso));
+    const pdfBuffer2 = Buffer.from(await createPdf(data, logo, codigoFinal, "", value_total, nombre_caso));
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
     const filePath = `clientes/${ruc_cliente}/registros_facturables_liquidaciones/${codigoFinal}.pdf`;
+    const filePath2 = `clientes/${ruc_cliente}/registros_facturables_liquidaciones/${codigoFinal}-cliente.pdf`;
 
-    /* const { data: uploadData, error: uploadError } = await supabase
+    const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from(bucketName)
       .upload(filePath, pdfBuffer, {
@@ -212,6 +217,17 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
 
     if (uploadError) {
       throw uploadError;
+    }
+
+    const { data: uploadClientData, error: uploadClientError } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(filePath2, pdfBuffer2, {
+        contentType: 'application/pdf'
+      });
+
+    if (uploadClientError) {
+      throw uploadClientError;
     }
 
     // Insertar el nuevo registro en reg_facturable_liq
@@ -225,7 +241,8 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
           value_total: value_total,
           user_id_liquidator: liquidator_id,
           liq_code: codigoFinal,
-          pdf_url: uploadData.fullPath
+          pdf_url: uploadData.fullPath,
+          pdf_url_cliente: uploadClientData.fullPath
         }
       ])
       .select()
@@ -263,10 +280,10 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
     // Responder con la URL firmada
     res.setHeader('Content-Type', 'application/json');
     console.log("OK");
-    res.status(201).send({ message: signedUrl.signedUrl }); */
-    res.setHeader('Content-Type', 'application/pdf');
+    res.status(201).send({ message: signedUrl.signedUrl });
+    /* res.setHeader('Content-Type', 'application/pdf');
     console.log("OK");
-    res.status(201).send(pdfBuffer2);
+    res.status(201).send(pdfBuffer); */
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
     const errorJSON = JSON.stringify(error);
@@ -410,8 +427,21 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
       throw userError;
     }
 
+    const { data: cajaChicaDetail, error: cajaChicaDetailError } = await supabase
+      .from("caja_chica_reg_detail")
+      .select("details")
+      .in("caja_chica_id", ids);
+
+      if (cajaChicaDetailError) {
+        throw cajaChicaDetailError;
+      }
+
     const clientMap = new Map(clientData.map(client => [client.id, client.client_name]));
     const caseMap = new Map(casoData.map(caso => [caso.id, caso.case_name]));
+    // Extraer los detalles y formatearlos en el formato requerido
+    const cajaChicaDetailFormatted = cajaChicaDetail
+    .map(detail => detail.details)
+    .join('/');
 
     // Construir los datos para el PDF
     const data: RowData[] = cajaChicaReg.map(row => ({
@@ -421,6 +451,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
       valor: formatValue(row.value),
       cliente: row.client_id ? clientMap.get(row.client_id) || "Cliente desconocido" : "Cliente desconocido",
       caso: row.caso_id ? caseMap.get(row.caso_id) || "Caso desconocido" : "Caso desconocido",
+      detalle: cajaChicaDetailFormatted
     }));
 
     // Constante para almacenar todos los soportes
@@ -530,7 +561,6 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
       throw newLiqError;
     }
 
-
     const newLiqId = newLiqData.id;
 
     // Actualizar los registros en reg_facturable
@@ -581,6 +611,10 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
     res.setHeader('Content-Type', 'application/json');
     console.log("OK");
     res.status(201).send({ message: signedUrl.signedUrl });
+
+    /* res.setHeader('Content-Type', 'application/pdf');
+    console.log("OK");
+    res.status(201).send(pdfBuffer); */
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
     const errorJSON = JSON.stringify(error);
@@ -737,7 +771,19 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
       throw usersError;
     }
 
+    const { data: cajaChicaDetail, error: cajaChicaDetailError } = await supabase
+      .from("caja_chica_reg_detail")
+      .select("details")
+      .in("caja_chica_id", ids);
+
+      if (cajaChicaDetailError) {
+        throw cajaChicaDetailError;
+      }
+
     const userMap = new Map(users.map(user => [user.id, user.display_name]));
+    const cajaChicaDetailFormatted = cajaChicaDetail
+    .map(detail => detail.details)
+    .join('/');
 
     // Construir los datos para el PDF
     const data: RowData[] = cajaChicaReg.map(row => ({
@@ -745,6 +791,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
       descripcion: row.concept,
       nombre_usuario: row.register_by_id ? userMap.get(row.register_by_id) || "Usuario desconocido" : "Usuario desconocido",
       valor: formatValue(row.value),
+      detalle: cajaChicaDetailFormatted
     }));
 
     // Constante para almacenar todos los soportes
@@ -842,7 +889,6 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
       throw newLiqError;
     }
 
-
     const newLiqId = newLiqData.id;
 
     // Actualizar los registros en reg_facturable
@@ -872,6 +918,9 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, 
     res.setHeader('Content-Type', 'application/json');
     console.log("OK");
     res.status(201).send({ message: signedUrl.signedUrl });
+    /* res.setHeader('Content-Type', 'application/pdf');
+    console.log("OK");
+    res.status(201).send(pdfBuffer); */
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
@@ -912,7 +961,7 @@ type RowData = {
   horasTrabajadas?: string | null;
   horasFacturables?: string | null;
   tarifaHora?: string | null;
-  valorTrabajo?: string | null;
+  detalle?: string | null;
 };
 
 async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, valor_total: number, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
@@ -925,8 +974,8 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
   const logoDims = logoImage.scale(0.15); // Escalar la imagen si es necesario
 
   let page: PDFPage;
-  if (tipoLiq == "reg_facturable_cliente") {
-    page = pdfDoc.addPage([792, 612]);
+  if(tipoLiq == "reg_facturable" || tipoLiq == "caja_chica_interna") {
+    page = pdfDoc.addPage([1028, 650]);
   } else {
     page = pdfDoc.addPage(PageSizes.Letter);
   }
@@ -945,7 +994,7 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
 
   // Título: "LIQUIDACIÓN DE GASTOS REEMBOLSABLES"
   page.drawText('LIQUIDACIÓN DE GASTOS REEMBOLSABLES', {
-    x: 35, // Justo a la derecha del logo, con un espacio adicional
+    x: 35,
     y: height - 130, // Ajuste vertical para estar alineado con la parte superior del logo
     size: fontSize,
     font: helveticaFont,
@@ -1016,21 +1065,23 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
+      { label: 'Detalles', key: 'detalle' },
       { label: 'Usuario', key: 'nombre_usuario' },
       { label: 'Valor', key: 'valor' },
       { label: 'Cliente', key: 'cliente' },
       { label: 'Caso', key: 'caso' },
     ];
-    columnWidths = [80, 140, 120, 50, 80, 80]; // Anchos de columna
+    columnWidths = [90, 140, 260, 120, 90, 120, 120]; // Anchos de columna
   } else if (tipoLiq == "caja_chica_cliente") {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
+      { label: 'Detalles', key: 'detalle' },
       { label: 'Usuario', key: 'nombre_usuario' },
       { label: 'Valor', key: 'valor' },
     ];
-    columnWidths = [100, 170, 170, 100]; // Anchos de columna
-  } else if (tipoLiq == "reg_facturable_cliente") {
+    columnWidths = [80, 100, 150, 120, 90]; // Anchos de columna
+  } else if (tipoLiq == "reg_facturable") {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
@@ -1040,18 +1091,18 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
       { label: 'Horas trabajadas', key: 'horasTrabajadas' },
       { label: 'Horas facturables', key: 'horasFacturables' },
       { label: 'Tarifa por hora', key: 'tarifaHora' },
-      { label: 'Valor trabajo', key: 'valorTrabajo' },
+      { label: 'Valor trabajo', key: 'valor' },
     ];
-    columnWidths = [66, 115, 98, 41, 66, 66, 82, 82, 82];
+    columnWidths = [65, 140, 140, 90, 90, 90, 90, 90, 90];
   } else {
     headers = [
       { label: 'Fecha', key: 'fecha' },
       { label: 'Descripción', key: 'descripcion' },
       { label: 'Nombre', key: 'nombre_usuario' },
-      { label: 'Duración', key: 'duracion'},
+      { label: 'Duración', key: 'horasFacturables'},
       { label: 'Valor', key: 'valor' },
     ];
-    columnWidths = [100, 140, 100, 100, 100]; // Anchos de columna
+    columnWidths = [100, 140, 100, 100, 90]; // Anchos de columna
   }
 
   headers.forEach((header, i) => {
@@ -1094,11 +1145,19 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     // Verificar si es la última página y si el pie de página adicional se superpondrá
     const spaceForFooter = footerMargin + 85 + footerFontSize * 4; // Espacio para el pie de página adicional, común y margen
     if (index === data.length - 1 && yPosition - maxLines * rowHeight < spaceForFooter) {
-      page = pdfDoc.addPage(PageSizes.Letter);
+      if(tipoLiq == "reg_facturable" || tipoLiq == "caja_chica_interna") {
+        page = pdfDoc.addPage([1028, 612]);
+      } else {
+        page = pdfDoc.addPage(PageSizes.Letter);
+      }
       yPosition = height - 50; // Reiniciar yPosition para la nueva página
     } else if (yPosition - maxLines * rowHeight < 60 + footerMargin) {
       // Crear una nueva página si no es la última página y no hay suficiente espacio para el margen y pie de página
-      page = pdfDoc.addPage(PageSizes.Letter);
+      if(tipoLiq == "reg_facturable" || tipoLiq == "caja_chica_interna") {
+        page = pdfDoc.addPage([1028, 612]);
+      } else {
+        page = pdfDoc.addPage(PageSizes.Letter);
+      }
       yPosition = height - 50; // Reiniciar yPosition para la nueva página
     }
 
@@ -1205,6 +1264,17 @@ function formatDate(timestamp: string | null): string | null {
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
+}
+
+// Función para formatear la fecha a "h:mm"
+function formatHour(timestamp: string | null): string | null {
+  if (timestamp === null) {
+    return null;
+  }
+  const date = new Date(timestamp);
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${hour}:${minute}`;
 }
 
 // Función para formatear la duración en "X horas X minutos"

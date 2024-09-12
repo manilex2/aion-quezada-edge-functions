@@ -19,11 +19,11 @@ import cors from "npm:cors";
 
 const PORT = process.env.PORT || 3000;
 
-interface Department {
+interface Company {
   code: string | null;
   color: string | null;
   created_at: string;
-  department_name: string | null;
+  company_name: string | null;
   director_id: string | null;
   icon: string | null;
   icon_dark: string | null;
@@ -127,11 +127,11 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
       throw institutionError;
     };
 
-    let departmentData: Department = {
+    let companyData: Company = {
       code: null,
       color: null,
       created_at: "",
-      department_name: null,
+      company_name: null,
       director_id: null,
       icon: null,
       icon_dark: null,
@@ -140,13 +140,13 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
       seleccion_temp: null
     };
 
-    if (body.departamento_id) {
-      const { data: department, error: departmentError } = await supabase.from("departments").select().eq("id", body.departamento_id).limit(1).single();
-      if (departmentError) {
-        console.error(departmentError);
-        throw departmentError;
+    if (body.company_id) {
+      const { data: company, error: companyError } = await supabase.from("companies").select().eq("id", body.company_id).limit(1).single();
+      if (companyError) {
+        console.error(companyError);
+        throw companyError;
       };
-      departmentData = department;
+      companyData = company;
     }
 
     const { data: registerUser, error: registerUserError } = await supabase.from("users").select().eq("id", body.registrado_por_id).limit(1).single();
@@ -164,7 +164,7 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
       surnames: body.apellidos ?? "N/D",
       enable: body.habilitado ?? true,
       rol_name: body.rol?? "N/D",
-      department_id: body.departamento_id? departmentData.id : null,
+      company_id: body.company_id? companyData.id : null,
       phone_number: body.numero_telefono ?? "N/D",
       photo_url: body.url_foto_perfil ?? null,
       register_by_email: body.registrado_por_email ?? "N/D",
@@ -194,7 +194,7 @@ app.post('/signUp', async (req: express.Request, res: express.Response) => {
         from: `${Deno.env.get("SENDGRID_SENDER_NAME")} ${Deno.env.get("SENDGRID_SENDER_EMAIL")}`,
         to: `${body.email}`,
         subject: `Registro de usuario exitoso en ${Deno.env.get("AION_NAME")}`,
-        html: `<p>Hola ${body.display_name}</p><p>Has sido registrado en la plataforma de ${Deno.env.get("AION_NAME")}.</p><p>Su usuario es el correo electrónico ${body.email} y su contraseña provisional: <b>${clave}</b></p><p>Al iniciar sesión por primera vez se le solicitará cambiar la contraseña.</p><p>Para ingresar a la plataforma de ${Deno.env.get("AION_NAME")} puede ingresar a través del siguiente link: <a href="${Deno.env.get("AION_URL")}">${Deno.env.get("AION_NAME")}</a></p><p>Atentamente</p><p><b>El equipo de ${Deno.env.get("AION_NAME")}</b></p>`,
+        html: `<p>Hola ${body.names} ${body.surnames}</p><p>Has sido registrado en la plataforma de ${Deno.env.get("AION_NAME")}.</p><p>Su usuario es el correo electrónico ${body.email} y su contraseña provisional: <b>${clave}</b></p><p>Al iniciar sesión por primera vez se le solicitará cambiar la contraseña.</p><p>Para ingresar a la plataforma de ${Deno.env.get("AION_NAME")} puede ingresar a través del siguiente link: <a href="${Deno.env.get("AION_URL")}">${Deno.env.get("AION_NAME")}</a></p><p>Atentamente</p><p><b>El equipo de ${Deno.env.get("AION_NAME")}</b></p>`,
       // deno-lint-ignore no-explicit-any
       }, (err: any, info: nodemailer.SentMessageInfo) => {
         if (err) {

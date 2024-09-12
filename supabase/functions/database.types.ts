@@ -930,7 +930,7 @@ export type Database = {
             foreignKeyName: "tramites_department_id_fkey"
             columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: "departments"
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
           {
@@ -956,12 +956,12 @@ export type Database = {
           },
         ]
       }
-      departments: {
+      companies: {
         Row: {
           code: string | null
           color: string | null
+          company_name: string | null
           created_at: string
-          department_name: string | null
           director_id: string | null
           icon: string | null
           icon_dark: string | null
@@ -972,8 +972,8 @@ export type Database = {
         Insert: {
           code?: string | null
           color?: string | null
+          company_name?: string | null
           created_at?: string
-          department_name?: string | null
           director_id?: string | null
           icon?: string | null
           icon_dark?: string | null
@@ -984,8 +984,8 @@ export type Database = {
         Update: {
           code?: string | null
           color?: string | null
+          company_name?: string | null
           created_at?: string
-          department_name?: string | null
           director_id?: string | null
           icon?: string | null
           icon_dark?: string | null
@@ -1276,6 +1276,7 @@ export type Database = {
           enable: boolean | null
           id: string
           materia_id: string | null
+          process_detail: string | null
           process_name: string | null
           tramites_quantity: number | null
         }
@@ -1285,6 +1286,7 @@ export type Database = {
           enable?: boolean | null
           id?: string
           materia_id?: string | null
+          process_detail?: string | null
           process_name?: string | null
           tramites_quantity?: number | null
         }
@@ -1294,6 +1296,7 @@ export type Database = {
           enable?: boolean | null
           id?: string
           materia_id?: string | null
+          process_detail?: string | null
           process_name?: string | null
           tramites_quantity?: number | null
         }
@@ -1309,6 +1312,7 @@ export type Database = {
       }
       process_activities: {
         Row: {
+          activity_detail: string | null
           activity_order: number | null
           created_at: string
           id: string
@@ -1319,6 +1323,7 @@ export type Database = {
           process_tramite_id: string | null
         }
         Insert: {
+          activity_detail?: string | null
           activity_order?: number | null
           created_at?: string
           id?: string
@@ -1329,6 +1334,7 @@ export type Database = {
           process_tramite_id?: string | null
         }
         Update: {
+          activity_detail?: string | null
           activity_order?: number | null
           created_at?: string
           id?: string
@@ -1426,6 +1432,7 @@ export type Database = {
           process_id: string | null
           process_tramite_name: string | null
           process_tramite_term: number | null
+          tramite_detail: string | null
           tramite_order: number | null
         }
         Insert: {
@@ -1435,6 +1442,7 @@ export type Database = {
           process_id?: string | null
           process_tramite_name?: string | null
           process_tramite_term?: number | null
+          tramite_detail?: string | null
           tramite_order?: number | null
         }
         Update: {
@@ -1444,6 +1452,7 @@ export type Database = {
           process_id?: string | null
           process_tramite_name?: string | null
           process_tramite_term?: number | null
+          tramite_detail?: string | null
           tramite_order?: number | null
         }
         Relationships: [
@@ -1781,7 +1790,7 @@ export type Database = {
             foreignKeyName: "users_department_id_fkey"
             columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: "departments"
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
           {
