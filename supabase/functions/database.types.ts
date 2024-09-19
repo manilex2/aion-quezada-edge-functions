@@ -19,6 +19,7 @@ export type Database = {
           end_date_planned: string | null
           end_date_real: string | null
           id: string
+          last_status: string | null
           order: number | null
           register_by_email: string | null
           register_by_id: string | null
@@ -37,6 +38,7 @@ export type Database = {
           end_date_planned?: string | null
           end_date_real?: string | null
           id?: string
+          last_status?: string | null
           order?: number | null
           register_by_email?: string | null
           register_by_id?: string | null
@@ -55,6 +57,7 @@ export type Database = {
           end_date_planned?: string | null
           end_date_real?: string | null
           id?: string
+          last_status?: string | null
           order?: number | null
           register_by_email?: string | null
           register_by_id?: string | null
@@ -112,6 +115,7 @@ export type Database = {
           end_date_real: string | null
           end_date_reschedule: string | null
           id: string
+          previous_responsible_id: string | null
           register_by_email: string | null
           register_by_id: string | null
           responsible_id: string | null
@@ -126,6 +130,7 @@ export type Database = {
           end_date_real?: string | null
           end_date_reschedule?: string | null
           id?: string
+          previous_responsible_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
@@ -140,6 +145,7 @@ export type Database = {
           end_date_real?: string | null
           end_date_reschedule?: string | null
           id?: string
+          previous_responsible_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
@@ -1136,6 +1142,80 @@ export type Database = {
         }
         Relationships: []
       }
+      lena_ai_chats: {
+        Row: {
+          created_at: string
+          id: string
+          message_received: string | null
+          message_sent: string | null
+          thread_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_received?: string | null
+          message_sent?: string | null
+          thread_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_received?: string | null
+          message_sent?: string | null
+          thread_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lena_ai_chats_threat_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "lena_ai_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lena_ai_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lena_ai_threads: {
+        Row: {
+          created_at: string
+          id: string
+          thread_detail: string | null
+          thread_id_oai: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          thread_detail?: string | null
+          thread_id_oai?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          thread_detail?: string | null
+          thread_id_oai?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lena_ai_threats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materia: {
         Row: {
           created_at: string
@@ -1156,6 +1236,38 @@ export type Database = {
           materia_name?: string | null
         }
         Relationships: []
+      }
+      my_notes: {
+        Row: {
+          color_code: string | null
+          created_at: string
+          id: string
+          note_text: string | null
+          user_id: string | null
+        }
+        Insert: {
+          color_code?: string | null
+          created_at?: string
+          id?: string
+          note_text?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          color_code?: string | null
+          created_at?: string
+          id?: string
+          note_text?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "my_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications_email: {
         Row: {
@@ -1199,9 +1311,11 @@ export type Database = {
         Row: {
           category: string | null
           created_at: string
+          email: boolean | null
           id: string
-          name: string | null
           new: boolean | null
+          notification_text: string | null
+          notification_title: string | null
           read: boolean | null
           related_id: string | null
           user_id: string | null
@@ -1209,9 +1323,11 @@ export type Database = {
         Insert: {
           category?: string | null
           created_at?: string
+          email?: boolean | null
           id?: string
-          name?: string | null
           new?: boolean | null
+          notification_text?: string | null
+          notification_title?: string | null
           read?: boolean | null
           related_id?: string | null
           user_id?: string | null
@@ -1219,9 +1335,11 @@ export type Database = {
         Update: {
           category?: string | null
           created_at?: string
+          email?: boolean | null
           id?: string
-          name?: string | null
           new?: boolean | null
+          notification_text?: string | null
+          notification_title?: string | null
           read?: boolean | null
           related_id?: string | null
           user_id?: string | null
@@ -1724,8 +1842,8 @@ export type Database = {
       users: {
         Row: {
           category: string | null
+          company_id: string | null
           created_at: string
-          department_id: string | null
           display_name: string | null
           email: string | null
           enable: boolean | null
@@ -1735,6 +1853,7 @@ export type Database = {
           id: string
           institution_id: string | null
           names: string | null
+          new_notifications: boolean | null
           phone_number: string | null
           photo_url: string | null
           register_by_email: string | null
@@ -1745,8 +1864,8 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          company_id?: string | null
           created_at?: string
-          department_id?: string | null
           display_name?: string | null
           email?: string | null
           enable?: boolean | null
@@ -1756,6 +1875,7 @@ export type Database = {
           id: string
           institution_id?: string | null
           names?: string | null
+          new_notifications?: boolean | null
           phone_number?: string | null
           photo_url?: string | null
           register_by_email?: string | null
@@ -1766,8 +1886,8 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          company_id?: string | null
           created_at?: string
-          department_id?: string | null
           display_name?: string | null
           email?: string | null
           enable?: boolean | null
@@ -1777,6 +1897,7 @@ export type Database = {
           id?: string
           institution_id?: string | null
           names?: string | null
+          new_notifications?: boolean | null
           phone_number?: string | null
           photo_url?: string | null
           register_by_email?: string | null
@@ -1787,8 +1908,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "users_department_id_fkey"
-            columns: ["department_id"]
+            foreignKeyName: "users_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
