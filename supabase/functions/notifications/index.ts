@@ -193,10 +193,10 @@ app.get('/notifications/actividades', async (req: express.Request, res: express.
     const today = startOfDay(new Date());
 
     const dayBefore = startOfDay(new Date(today));
-    dayBefore.setDate(dayBefore.getDate() - 1);
+    dayBefore.setDate(dayBefore.getDate() + 1);
 
-    const dayAfter = startOfDay(new Date(today));
-    dayAfter.setDate(dayAfter.getDate() + 1);
+    const day2Before = startOfDay(new Date(today));
+    day2Before.setDate(day2Before.getDate() + 2);
 
     // Consulta a Supabase para obtener actividades del día anterior
     const { data: actividadesAntesData, error: actividadesAntesDataError } = await supabase
@@ -204,7 +204,7 @@ app.get('/notifications/actividades', async (req: express.Request, res: express.
       .select('*')
       .eq("close", false)
       .gte("end_date_planned", dayBefore.toISOString())
-      .lt("end_date_planned", today.toISOString());
+      .lt("end_date_planned", day2Before.toISOString());
 
     if (actividadesAntesDataError) {
       console.error("Error al obtener las actividades:", actividadesAntesDataError);
@@ -240,7 +240,7 @@ app.get('/notifications/actividades', async (req: express.Request, res: express.
       .select('*')
       .eq("close", false)
       .gte("end_date_planned", today.toISOString())
-      .lt("end_date_planned", dayAfter.toISOString());
+      .lt("end_date_planned", dayBefore.toISOString());
 
     if (actividadesActualDataError) {
       console.error("Error al obtener las actividades:", actividadesActualDataError);
@@ -275,7 +275,7 @@ app.get('/notifications/actividades', async (req: express.Request, res: express.
       .from('actividades')
       .select('*')
       .eq("close", false)
-      .gte("end_date_planned", dayAfter.toISOString());
+      .lt("end_date_planned", today.toISOString());
 
     if (actividadesDespuesDataError) {
       console.error("Error al obtener las actividades:", actividadesDespuesDataError);
@@ -380,10 +380,10 @@ app.get('/notifications/tramites', async (req: express.Request, res: express.Res
     const today = startOfDay(new Date());
 
     const dayBefore = startOfDay(new Date(today));
-    dayBefore.setDate(dayBefore.getDate() - 1);
+    dayBefore.setDate(dayBefore.getDate() + 1);
 
-    const dayAfter = startOfDay(new Date(today));
-    dayAfter.setDate(dayAfter.getDate() + 1);
+    const day2Before = startOfDay(new Date(today));
+    day2Before.setDate(day2Before.getDate() + 2);
 
     // Consulta a Supabase para obtener trámites del día anterior
     const { data: tramitesAntesData, error: tramitesAntesDataError } = await supabase
@@ -391,7 +391,7 @@ app.get('/notifications/tramites', async (req: express.Request, res: express.Res
       .select('*')
       .eq("close", false)
       .gte("end_date_planned", dayBefore.toISOString())
-      .lt("end_date_planned", today.toISOString());
+      .lt("end_date_planned", day2Before.toISOString());
 
     if (tramitesAntesDataError) {
       console.error("Error al obtener los trámites:", tramitesAntesDataError);
@@ -427,7 +427,7 @@ app.get('/notifications/tramites', async (req: express.Request, res: express.Res
       .select('*')
       .eq("close", false)
       .gte("end_date_planned", today.toISOString())
-      .lt("end_date_planned", dayAfter.toISOString());
+      .lt("end_date_planned", dayBefore.toISOString());
 
     if (tramitesActualDataError) {
       console.error("Error al obtener los trámites:", tramitesActualDataError);
@@ -462,7 +462,7 @@ app.get('/notifications/tramites', async (req: express.Request, res: express.Res
       .from('client_tramites')
       .select('*')
       .eq("close", false)
-      .gte("end_date_planned", dayAfter.toISOString());
+      .lt("end_date_planned", today.toISOString());
 
     if (tramitesDespuesDataError) {
       console.error("Error al obtener los trámites:", tramitesDespuesDataError);
@@ -660,7 +660,6 @@ app.get('/notifications/cajachica', async (req: express.Request, res: express.Re
     const { data: cajaChicaData, error: cajaChicaDataError } = await supabase
       .from('caja_chica_registros')
       .select('*')
-      .eq("internal_liquidation", false)
       .eq("client_liquidation", false)
       .lte("date", tenDaysAgo.toISOString());
 
