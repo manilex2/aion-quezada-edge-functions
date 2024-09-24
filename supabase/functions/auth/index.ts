@@ -618,24 +618,27 @@ app.put('/auth/changeUserEmail', async (req: express.Request, res: express.Respo
 
     const body = req.body;
 
-    const { data: userRegister, error: userRegisterError } = await supabase.from("users").select().eq('email', body.email).limit(1).single();
-    if (userRegisterError) {
-      console.error(userRegisterError);
-      throw new Error(userRegisterError.message);
-    }
+    const users = (await supabase.from("users").select().eq('email', body.email)).count;
 
-    if (userRegister) {
+    if (users != null && users > 0) {
       throw "CONFLICT: Ya se encuentra un usuario registrado con ese email.";
     }
 
-    const { error: userError } = await supabase.auth.admin.updateUserById(
-      body.id,
+    const supabase2 = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
+    const { error: userError } = await supabase2.auth.admin.updateUserById(
+      `${body.id}`,
       { email: body.email, }
     );
 
     if (userError) {
       console.error(userError);
-      throw userError;
+      throw new Error(userError.message);
     }
 
     const { error: userChangedError } = await supabase
@@ -645,7 +648,7 @@ app.put('/auth/changeUserEmail', async (req: express.Request, res: express.Respo
 
     if (userChangedError) {
       console.error(userChangedError);
-      throw userChangedError;
+      throw new Error (userChangedError.message);
     }
 
     console.log("OK");
