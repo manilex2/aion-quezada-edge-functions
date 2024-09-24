@@ -761,6 +761,8 @@ export type Database = {
       }
       client_casos: {
         Row: {
+          adjustment_percentage: number | null
+          adjustment_values: boolean | null
           case_name: string | null
           client_id: string | null
           close: boolean | null
@@ -778,6 +780,8 @@ export type Database = {
           termino: number | null
         }
         Insert: {
+          adjustment_percentage?: number | null
+          adjustment_values?: boolean | null
           case_name?: string | null
           client_id?: string | null
           close?: boolean | null
@@ -795,6 +799,8 @@ export type Database = {
           termino?: number | null
         }
         Update: {
+          adjustment_percentage?: number | null
+          adjustment_values?: boolean | null
           case_name?: string | null
           client_id?: string | null
           close?: boolean | null
@@ -1026,6 +1032,7 @@ export type Database = {
           file_url: string | null
           habilitantes_name: string | null
           id: string
+          notif_post: boolean | null
           register_by_email: string | null
           register_by_id: string | null
         }
@@ -1038,6 +1045,7 @@ export type Database = {
           file_url?: string | null
           habilitantes_name?: string | null
           id?: string
+          notif_post?: boolean | null
           register_by_email?: string | null
           register_by_id?: string | null
         }
@@ -1050,6 +1058,7 @@ export type Database = {
           file_url?: string | null
           habilitantes_name?: string | null
           id?: string
+          notif_post?: boolean | null
           register_by_email?: string | null
           register_by_id?: string | null
         }
@@ -1667,6 +1676,7 @@ export type Database = {
         Row: {
           activity: string | null
           activity_id: string | null
+          adjustment_percentage: number | null
           caso_id: string | null
           client_id: string | null
           created_at: string
@@ -1683,10 +1693,12 @@ export type Database = {
           start_date_time: string | null
           total_value: number | null
           tramite_id: string | null
+          value_pre_adjusrment: number | null
         }
         Insert: {
           activity?: string | null
           activity_id?: string | null
+          adjustment_percentage?: number | null
           caso_id?: string | null
           client_id?: string | null
           created_at?: string
@@ -1703,10 +1715,12 @@ export type Database = {
           start_date_time?: string | null
           total_value?: number | null
           tramite_id?: string | null
+          value_pre_adjusrment?: number | null
         }
         Update: {
           activity?: string | null
           activity_id?: string | null
+          adjustment_percentage?: number | null
           caso_id?: string | null
           client_id?: string | null
           created_at?: string
@@ -1723,6 +1737,7 @@ export type Database = {
           start_date_time?: string | null
           total_value?: number | null
           tramite_id?: string | null
+          value_pre_adjusrment?: number | null
         }
         Relationships: [
           {

@@ -945,6 +945,203 @@ app.get('/notifications/factura', async (req: express.Request, res: express.Resp
   }
 });
 
+app.get('/notifications/habilitantes', async (req: express.Request, res: express.Response) => {  
+  try {
+    res.setHeader('Content-Type', 'application/json');
+  
+    let supabase;
+  
+    let accessToken: string;
+  
+    if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
+      console.log("ENTORNO: PRODUCCIÓN");
+      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+        global: {
+          headers: { Authorization: req.headers.authorization! }
+        }
+      });
+      // Primero tomar el token del header de autorizacion
+      accessToken = req.headers.authorization!.replace('Bearer ', '')
+
+      // Verificar si el token es válido obteniendo los datos del usuario
+      const { data: user, error } = await supabase.auth.getUser(accessToken);
+
+      if (!accessToken) {
+        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+      }
+      
+      if (error || !user) {
+        throw 'UNAUTHORIZED: Token de autorización inválido.';
+      }
+
+    } else {
+      console.log("ENTORNO: DESARROLLO");
+      supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    }
+
+    // Definir las fechas
+    const today = startOfDay(new Date());
+
+    const dayBefore = startOfDay(new Date(today));
+    dayBefore.setDate(dayBefore.getDate() + 1);
+
+    const day2Before = startOfDay(new Date(today));
+    day2Before.setDate(day2Before.getDate() + 2);
+
+    // Consulta a Supabase para obtener habilitantes del día anterior
+    const { data: habilitantesAntesData, error: habilitantesAntesDataError } = await supabase
+      .from('habilitantes')
+      .select('*')
+      .gte("exp_date", dayBefore.toISOString())
+      .lt("exp_date", day2Before.toISOString());
+
+    if (habilitantesAntesDataError) {
+      console.error("Error al obtener las habilitantes:", habilitantesAntesDataError);
+    } else {
+      console.log("Habilitantes del día anterior:", habilitantesAntesData);
+      for (const habilitante of habilitantesAntesData) {
+        try {
+          const { error: pushDataError } = await supabase
+            .from("notifications_push")
+            .insert({
+              email: false,
+              category: "Prevencimiento",
+              new: true,
+              read: false,
+              user_id: habilitante.client_id,
+              related_id: habilitante.id,
+              notification_title: "Habilitante Por Vencer",
+              notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
+            })
+            if (pushDataError) {
+              console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
+              continue;
+            }
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+    }
+
+    // Consulta a Supabase para obtener habilitantes del día actual
+    const { data: habilitantesActualData, error: habilitantesActualDataError } = await supabase
+      .from('habilitantes')
+      .select('*')
+      .gte("exp_date", today.toISOString())
+      .lt("exp_date", dayBefore.toISOString());
+
+    if (habilitantesActualDataError) {
+      console.error("Error al obtener las habilitantes:", habilitantesActualDataError);
+    } else {
+      console.log("Habilitantes del día actual:", habilitantesActualData);
+      for (const habilitante of habilitantesActualData) {
+        try {
+          const { error: pushDataError } = await supabase
+            .from("notifications_push")
+            .insert({
+              email: false,
+              category: "Vencimiento",
+              new: true,
+              read: false,
+              user_id: habilitante.client_id,
+              related_id: habilitante.id,
+              notification_title: "Actividad Vencida",
+              notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
+            })
+            if (pushDataError) {
+              console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
+              continue;
+            }
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+    }
+
+    // Consulta a Supabase para obtener habilitantes del día despues
+    const { data: habilitantesDespuesData, error: habilitantesDespuesDataError } = await supabase
+      .from('habilitantes')
+      .select('*')
+      .eq("notif_post", false)
+      .lt("exp_date", today.toISOString());
+
+    if (habilitantesDespuesDataError) {
+      console.error("Error al obtener las habilitantes:", habilitantesDespuesDataError);
+    } else {
+      console.log("Habilitantes del día después:", habilitantesDespuesData);
+      for (const habilitante of habilitantesDespuesData) {
+        const vencimiento = habilitante.exp_date? startOfDay(new Date(habilitante.exp_date)) : startOfDay(new Date());
+        const opciones: Intl.DateTimeFormatOptions = { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric' 
+        };
+        
+        const fechaFormateada = vencimiento.toLocaleDateString('es-ES', opciones);
+        try {
+          const { error: pushDataError } = await supabase
+            .from("notifications_push")
+            .insert({
+              email: false,
+              category: "Postvencimiento",
+              new: true,
+              read: false,
+              user_id: habilitante.client_id,
+              related_id: habilitante.id,
+              notification_title: "Actividad Post-vencimiento",
+              notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
+            })
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
+            continue;
+          }
+
+          const { error: habilitanteUpdateError } = await supabase
+            .from("habilitantes")
+            .update({
+              notif_post: true,
+            })
+            .eq("id", habilitante.id)
+          if (habilitanteUpdateError) {
+            console.error("Error al actualizar el estatus de la habilitante:", pushDataError);
+            continue;
+          }
+
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+    }
+
+    console.log("OK");
+    res.status(201).send({ message: "Notificaciones push de actividades enviadas correctamente." });
+  } catch (error) {
+    const errorJSON = JSON.stringify(error);
+    if (typeof error === "string") {
+      if (error.startsWith("BAD REQUEST")) {
+        res.status(400).send({ message: `Ocurrió el siguiente error de solicitud incorrecta: ${errorJSON}` });
+      } else if (error.startsWith("UNAUTHORIZED")) {
+        res.status(401).send({ message: `Ocurrió el siguiente error de autorización: ${errorJSON}` });
+      } else if (error.startsWith("FORBIDDEN")) {
+        res.status(403).send({ message: `Ocurrió el siguiente error de prohibición: ${errorJSON}` });
+      } else if (error.startsWith("NOT FOUND")) {
+        res.status(404).send({ message: `Ocurrió el siguiente error de localización: ${errorJSON}` });
+      } else if (error.startsWith("CONFLICT")) {
+        res.status(409).send({ message: `Ocurrió el siguiente error de conflictos: ${errorJSON}` });
+      } else {
+        res.status(500).send({ message: `Ocurrió el siguiente error: ${errorJSON}` });
+      }
+    } else {
+      res.status(500).send({ message: `Ocurrió el siguiente error: ${errorJSON}` });
+    }
+  }
+});
+
 app.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`);
 });
