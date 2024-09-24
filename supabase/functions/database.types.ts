@@ -1390,6 +1390,7 @@ export type Database = {
       process: {
         Row: {
           activities_quantity: number | null
+          consultant: boolean | null
           created_at: string
           enable: boolean | null
           id: string
@@ -1400,6 +1401,7 @@ export type Database = {
         }
         Insert: {
           activities_quantity?: number | null
+          consultant?: boolean | null
           created_at?: string
           enable?: boolean | null
           id?: string
@@ -1410,6 +1412,7 @@ export type Database = {
         }
         Update: {
           activities_quantity?: number | null
+          consultant?: boolean | null
           created_at?: string
           enable?: boolean | null
           id?: string
@@ -1432,6 +1435,7 @@ export type Database = {
         Row: {
           activity_detail: string | null
           activity_order: number | null
+          consultant: boolean | null
           created_at: string
           id: string
           prev_activity_id: string | null
@@ -1443,6 +1447,7 @@ export type Database = {
         Insert: {
           activity_detail?: string | null
           activity_order?: number | null
+          consultant?: boolean | null
           created_at?: string
           id?: string
           prev_activity_id?: string | null
@@ -1454,6 +1459,7 @@ export type Database = {
         Update: {
           activity_detail?: string | null
           activity_order?: number | null
+          consultant?: boolean | null
           created_at?: string
           id?: string
           prev_activity_id?: string | null
@@ -1544,6 +1550,7 @@ export type Database = {
       }
       process_tramites: {
         Row: {
+          consultant: boolean | null
           created_at: string
           id: string
           prev_tramite_id: string | null
@@ -1554,6 +1561,7 @@ export type Database = {
           tramite_order: number | null
         }
         Insert: {
+          consultant?: boolean | null
           created_at?: string
           id?: string
           prev_tramite_id?: string | null
@@ -1564,6 +1572,7 @@ export type Database = {
           tramite_order?: number | null
         }
         Update: {
+          consultant?: boolean | null
           created_at?: string
           id?: string
           prev_tramite_id?: string | null
@@ -1843,6 +1852,7 @@ export type Database = {
         Row: {
           category: string | null
           company_id: string | null
+          consultant: boolean | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -1861,10 +1871,12 @@ export type Database = {
           rol_name: string | null
           surnames: string | null
           title: string | null
+          tokenReset: string | null
         }
         Insert: {
           category?: string | null
           company_id?: string | null
+          consultant?: boolean | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -1883,10 +1895,12 @@ export type Database = {
           rol_name?: string | null
           surnames?: string | null
           title?: string | null
+          tokenReset?: string | null
         }
         Update: {
           category?: string | null
           company_id?: string | null
+          consultant?: boolean | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -1905,6 +1919,7 @@ export type Database = {
           rol_name?: string | null
           surnames?: string | null
           title?: string | null
+          tokenReset?: string | null
         }
         Relationships: [
           {
