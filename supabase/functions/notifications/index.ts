@@ -9,8 +9,9 @@ import { config } from "npm:dotenv@16.4.5";
 import process from "node:process";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
 import { Database } from "../database.types.ts";
-import { getCorsHeaders } from '../_shared/cors.ts';
-import cors from "npm:cors";
+// import { getCorsHeaders } from '../_shared/cors.ts';
+// @deno-types="npm:@types/cors";
+import cors, { CorsOptions } from "npm:cors";
 
 const PORT = process.env.PORT || 3000;
 
@@ -20,10 +21,9 @@ const app = express();
 app.use(morgan("dev"));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(cors());
 
 // Middleware CORS personalizado
-app.use((req, res, next) => {
+/* app.use((req, res, next) => {
     const origin = req.headers.origin as string;
     const corsHeaders = getCorsHeaders(origin);
   
@@ -37,9 +37,22 @@ app.use((req, res, next) => {
     }
   
     next();
-});
+}); */
 
-app.post('/notifications/customEmail', async (req: express.Request, res: express.Response) => {  
+const whitelist = ['https://aion-juridico.flutterflow.app', 'https://app.flutterflow.io/debug', 'https://app.estudioquezada.com.ec', 'https://aion-juridico-app-flutter.web.app'];
+const corsOptions: CorsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin!) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('No permitido por CORS'))
+    }
+  }
+}
+
+app.options('*', cors(corsOptions));
+
+app.post('/notifications/customEmail', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
   
@@ -150,7 +163,7 @@ app.post('/notifications/customEmail', async (req: express.Request, res: express
   }
 });
 
-app.get('/notifications/actividades', async (req: express.Request, res: express.Response) => {  
+app.get('/notifications/actividades', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
   
@@ -337,7 +350,7 @@ app.get('/notifications/actividades', async (req: express.Request, res: express.
   }
 });
 
-app.get('/notifications/tramites', async (req: express.Request, res: express.Response) => {  
+app.get('/notifications/tramites', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
   
@@ -611,7 +624,7 @@ app.get('/notifications/tramites', async (req: express.Request, res: express.Res
   }
 });
 
-app.get('/notifications/cajachica', async (req: express.Request, res: express.Response) => {  
+app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
   
@@ -778,7 +791,7 @@ app.get('/notifications/cajachica', async (req: express.Request, res: express.Re
   }
 });
 
-app.get('/notifications/factura', async (req: express.Request, res: express.Response) => {  
+app.get('/notifications/factura', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
   
@@ -945,7 +958,7 @@ app.get('/notifications/factura', async (req: express.Request, res: express.Resp
   }
 });
 
-app.get('/notifications/habilitantes', async (req: express.Request, res: express.Response) => {  
+app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
   

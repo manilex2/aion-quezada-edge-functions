@@ -8,8 +8,9 @@ import { config } from "npm:dotenv@16.4.5";
 import process from "node:process";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
 import { Database } from "../database.types.ts";
-import { getCorsHeaders } from '../_shared/cors.ts';
-import cors from "npm:cors";
+// import { getCorsHeaders } from '../_shared/cors.ts';
+// @deno-types="npm:@types/cors";
+import cors, { CorsOptions } from "npm:cors";
 import {
   genSaltSync,
 } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
@@ -25,24 +26,6 @@ const app = express();
 app.use(morgan("dev"));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(cors());
-
-// Middleware CORS personalizado
-app.use((req, res, next) => {
-  const origin = req.headers.origin as string;
-  const corsHeaders = getCorsHeaders(origin);
-
-  for (const header in corsHeaders) {
-      res.setHeader(header, corsHeaders[header]);
-  }
-
-  // Responder a las solicitudes OPTIONS
-  if (req.method === 'OPTIONS') {
-      return res.status(204).end();
-  }
-
-  next();
-});
 
 interface Company {
   code: string | null;
@@ -57,8 +40,21 @@ interface Company {
   seleccion_temp: boolean | null;
 }
 
+const whitelist = ['https://aion-juridico.flutterflow.app', 'https://app.flutterflow.io/debug', 'https://app.estudioquezada.com.ec', 'https://aion-juridico-app-flutter.web.app'];
+const corsOptions: CorsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin!) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('No permitido por CORS'))
+    }
+  }
+}
 
-app.put('/auth/changePassword', async (req: express.Request, res: express.Response) => {
+app.options('*', cors(corsOptions));
+
+
+app.put('/auth/changePassword', cors(corsOptions), async (req: express.Request, res: express.Response) => {
   try {
     res.setHeader('Content-Type', 'application/json');
 
@@ -150,7 +146,7 @@ app.put('/auth/changePassword', async (req: express.Request, res: express.Respon
   }
 })
 
-app.post('/auth/confirmForgotPassword', async (req: express.Request, res: express.Response) => {    
+app.post('/auth/confirmForgotPassword', cors(corsOptions), async (req: express.Request, res: express.Response) => {    
   try {
     res.setHeader('Content-Type', 'application/json');
 
@@ -278,7 +274,7 @@ app.post('/auth/confirmForgotPassword', async (req: express.Request, res: expres
   }
 });
 
-app.post('/auth/forgotPassword', async (req: express.Request, res: express.Response) => {    
+app.post('/auth/forgotPassword', cors(corsOptions), async (req: express.Request, res: express.Response) => {    
   try {
     res.setHeader('Content-Type', 'application/json');
 
@@ -391,7 +387,7 @@ app.post('/auth/forgotPassword', async (req: express.Request, res: express.Respo
   }
 });
 
-app.post('/auth/signUp', async (req: express.Request, res: express.Response) => {  
+app.post('/auth/signUp', cors(corsOptions), async (req: express.Request, res: express.Response) => {  
   try {
     res.setHeader('Content-Type', 'application/json');
 
@@ -571,7 +567,7 @@ app.post('/auth/signUp', async (req: express.Request, res: express.Response) => 
   }
 });
 
-app.put('/auth/changeUserEmail', async (req: express.Request, res: express.Response) => {
+app.put('/auth/changeUserEmail', cors(corsOptions), async (req: express.Request, res: express.Response) => {
   try {
     res.setHeader('Content-Type', 'application/json');
 

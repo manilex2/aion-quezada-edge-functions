@@ -9,8 +9,9 @@ import process from "node:process";
 import { Buffer } from "node:buffer";
 import { SupabaseClient, createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
 import { Database } from "../database.types.ts";
-import { getCorsHeaders } from '../_shared/cors.ts';
-import cors from "npm:cors";
+// import { getCorsHeaders } from '../_shared/cors.ts';
+// @deno-types="npm:@types/cors";
+import cors, { CorsOptions } from "npm:cors";
 import { PDFDocument, StandardFonts, rgb, PageSizes, PDFPage, PDFFont } from "npm:pdf-lib@1.17.1";
 
 const PORT = process.env.PORT || 3000;
@@ -21,10 +22,10 @@ const app = express();
 app.use(morgan("dev"));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(cors());
+// app.use(cors());
 
 // Middleware CORS personalizado
-app.use((req, res, next) => {
+/* app.use((req, res, next) => {
   const origin = req.headers.origin as string;
   const corsHeaders = getCorsHeaders(origin);
 
@@ -38,9 +39,22 @@ app.use((req, res, next) => {
   }
 
   next();
-});
+}); */
 
-app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: express.Response) => { 
+const whitelist = ['https://aion-juridico.flutterflow.app', 'https://app.flutterflow.io/debug', 'https://app.estudioquezada.com.ec', 'https://aion-juridico-app-flutter.web.app'];
+const corsOptions: CorsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin!) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('No permitido por CORS'))
+    }
+  }
+}
+
+app.options('*', cors(corsOptions));
+
+app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.Request, res: express.Response) => { 
   try {
     let supabase: SupabaseClient;
 
@@ -307,7 +321,7 @@ app.post('/reportePDF/reportePDFRegFac', async (req: express.Request, res: expre
   }
 });
 
-app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, res: express.Response) => { 
+app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req: express.Request, res: express.Response) => { 
   try {
     let supabase: SupabaseClient;
 
@@ -638,7 +652,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', async (req: express.Request, 
   }
 });
 
-app.post('/reportePDF/reportePDFCajaChicaCliente', async (req: express.Request, res: express.Response) => { 
+app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req: express.Request, res: express.Response) => { 
   try {
     let supabase;
 
