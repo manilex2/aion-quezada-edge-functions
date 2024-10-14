@@ -450,12 +450,22 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
         throw cajaChicaDetailError;
       }
 
+    // Crear un mapa de caja_chica_id a una lista de detalles
+    const cajaChicaDetailMap = new Map();
+    
+    // Llenar el mapa con arrays de detalles para cada caja_chica_id
+    cajaChicaDetail.forEach(detail => {
+      if (!cajaChicaDetailMap.has(detail.caja_chica_id)) {
+        cajaChicaDetailMap.set(detail.caja_chica_id, []); // Inicializar array si no existe
+      }
+      cajaChicaDetailMap.get(detail.caja_chica_id).push(detail.details); // Agregar el detalle al array
+    });
+
     const clientMap = new Map(clientData.map(client => [client.id, client.client_name]));
     const caseMap = new Map(casoData.map(caso => [caso.id, caso.case_name]));
-    // Extraer los detalles y formatearlos en el formato requerido
-    const cajaChicaDetailFormatted = cajaChicaDetail
-    .map(detail => detail.details)
-    .join('/');
+
+    // Definir el separador para los detalles
+    const detalleSeparator = " / ";  // Puedes cambiar este separador según lo que prefieras
 
     // Construir los datos para el PDF
     const data: RowData[] = cajaChicaReg.map(row => ({
@@ -465,7 +475,10 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
       valor: formatValue(row.value),
       cliente: row.client_id ? clientMap.get(row.client_id) || "Cliente desconocido" : "Cliente desconocido",
       caso: row.caso_id ? caseMap.get(row.caso_id) || "Caso desconocido" : "Caso desconocido",
-      detalle: cajaChicaDetailFormatted
+      // Obtener y unir los detalles correspondientes al caja_chica_id del registro
+      detalle: cajaChicaDetailMap.has(row.id)
+        ? cajaChicaDetailMap.get(row.id).join(detalleSeparator)
+        : "Detalle desconocido"
     }));
 
     // Constante para almacenar todos los soportes
