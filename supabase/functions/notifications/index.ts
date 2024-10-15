@@ -42,7 +42,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const whitelist = ['https://aion-juridico.flutterflow.app', 'https://app.flutterflow.io/debug', 'https://app.estudioquezada.com.ec', 'https://aion-juridico-app-flutter.web.app'];
 const corsOptions: CorsOptions = {
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin!) !== -1) {
+    if (!origin || whitelist.indexOf(origin!) !== -1) {
       callback(null, true)
     } else {
       callback(new Error('No permitido por CORS'))
