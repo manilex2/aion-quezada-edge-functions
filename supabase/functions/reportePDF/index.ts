@@ -443,7 +443,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
 
     const { data: cajaChicaDetail, error: cajaChicaDetailError } = await supabase
       .from("caja_chica_reg_detail")
-      .select("details")
+      .select("details, caja_chica_id")
       .in("caja_chica_id", ids);
 
       if (cajaChicaDetailError) {
