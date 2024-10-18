@@ -433,7 +433,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
     // Obtener los nombres de usuario correspondientes
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("id, display_name")
+      .select("id, display_name, email")
       .eq("id", user_id)
       .single();
 
@@ -554,7 +554,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
-    const filePath = `files/${user_id}/caja_chica_interna_liquidaciones/${codigoFinal}.pdf`;
+    const filePath = `users/${user.email}/caja_chica_interna_liquidaciones/${codigoFinal}.pdf`;
 
     const { data: uploadData, error: uploadError } = await supabase
       .storage
