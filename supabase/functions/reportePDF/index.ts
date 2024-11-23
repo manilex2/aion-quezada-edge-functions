@@ -9,6 +9,8 @@ import process from "node:process";
 import { Buffer } from "node:buffer";
 import { SupabaseClient, createClient } from "https://esm.sh/@supabase/supabase-js@2.44.1"
 import { Database } from "../database.types.ts";
+// @deno-types="npm:@types/luxon";
+import { DateTime } from "npm:luxon@3.5.0";
 // import { getCorsHeaders } from '../_shared/cors.ts';
 // @deno-types="npm:@types/cors";
 import cors, { CorsOptions } from "npm:cors";
@@ -128,8 +130,8 @@ app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.
     const ruc_cliente = clientData.id_number || "RUC desconocido";
 
     // Obtener la fecha actual en formato "MM-YYYY"
-    const fechaActual = new Date();
-    const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
+    const fechaActual = DateTime.now().setZone("America/Guayaquil");
+    const fechaFormateada = formatDateToMonthYear(fechaActual.toISO());
 
     // Generar el código base concatenado
     const codigoBase = `RFL-${ruc_cliente}-${fechaFormateada}`;
@@ -391,7 +393,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
     }
 
     // Obtener la fecha actual en formato "MM-YYYY"
-    const fechaActual = new Date();
+    const fechaActual = DateTime.now().setZone("America/Guayaquil");
     const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
 
     // Generar el código base concatenado
@@ -747,8 +749,8 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req
     const ruc_cliente = clientData.id_number || "RUC desconocido";
 
     // Obtener la fecha actual en formato "MM-YYYY"
-    const fechaActual = new Date();
-    const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
+    const fechaActual = DateTime.now().setZone("America/Guayaquil");
+    const fechaFormateada = formatDateToMonthYear(fechaActual.toISO());
 
     // Generar el código base concatenado
     const codigoBase = `CCCL-${ruc_cliente}-${fechaFormateada}`;
