@@ -246,6 +246,8 @@ app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.
       throw uploadClientError;
     }
 
+    const maxPaymentDay = fechaActual.plus({ days: 10 }).toISO();
+
     // Insertar el nuevo registro en reg_facturable_liq
     const { data: newLiqData, error: newLiqError } = await supabase
       .from("reg_facturable_liq")
@@ -258,7 +260,8 @@ app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.
           user_id_liquidator: liquidator_id,
           liq_code: codigoFinal,
           pdf_url: uploadData.fullPath,
-          pdf_url_cliente: uploadClientData.fullPath
+          pdf_url_cliente: uploadClientData.fullPath,
+          max_payment_day: maxPaymentDay
         }
       ])
       .select()
@@ -898,6 +901,8 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req
       throw uploadError;
     }
 
+    const maxPaymentDay = fechaActual.plus({ days: 10 }).toISO();
+
     const { data: newLiqData, error: newLiqError } = await supabase
       .from("caja_chica_liq_client")
       .insert([
@@ -908,6 +913,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req
           user_id_liquidator: liquidator_id,
           value: value_total,
           pdf_url: uploadData.fullPath,
+          max_payment_day: maxPaymentDay
         }
       ])
       .select()
