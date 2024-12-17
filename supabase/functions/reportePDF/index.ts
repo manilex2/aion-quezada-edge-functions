@@ -394,7 +394,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
 
     // Obtener la fecha actual en formato "MM-YYYY"
     const fechaActual = DateTime.now().setZone("America/Guayaquil");
-    const fechaFormateada = formatDateToMonthYear(fechaActual.toISOString());
+    const fechaFormateada = formatDateToMonthYear(fechaActual.toISO());
 
     // Generar el código base concatenado
     const codigoBase = `CCIL-${fechaFormateada}`;
@@ -422,7 +422,6 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
       .select("*")
       .filter("internal_liquidation", "eq", false)
       .in("id", ids);
-
 
     if (cajaChicaRegError) {
       throw cajaChicaRegError;
