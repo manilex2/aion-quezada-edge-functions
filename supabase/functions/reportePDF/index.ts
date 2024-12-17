@@ -1020,8 +1020,8 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     height: logoDims.height,
   });
 
-  // Título: "LIQUIDACIÓN DE GASTOS REEMBOLSABLES"
-  page.drawText('LIQUIDACIÓN DE GASTOS REEMBOLSABLES', {
+  // Título: "LIQUIDACIÓN DE HORAS FACTURABLES"
+  page.drawText('LIQUIDACIÓN DE HORAS FACTURABLES', {
     x: 35,
     y: height - 130, // Ajuste vertical para estar alineado con la parte superior del logo
     size: fontSize,
