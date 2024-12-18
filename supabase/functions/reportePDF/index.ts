@@ -1026,8 +1026,12 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     height: logoDims.height,
   });
 
-  // Título: "LIQUIDACIÓN DE HORAS FACTURABLES"
-  page.drawText('LIQUIDACIÓN DE HORAS FACTURABLES', {
+  const titulo = tipoLiq == 'caja_chica_interna' ? 'LIQUIDACIÓN INTERNA DE GASTOS REEMBOLSABLES'
+  : tipoLiq == 'caja_chica_cliente' ? 'LIQUIDACIÓN DE GASTOS REEMBOLSABLES'
+  : tipoLiq == 'reg_facturable' ? 'LIQUIDACIÓN INTERNA DE HORAS FACTURABLES'
+  : 'LIQUIDACIÓN DE HORAS FACTURABLES';
+
+  page.drawText(titulo, {
     x: 35,
     y: height - 130, // Ajuste vertical para estar alineado con la parte superior del logo
     size: fontSize,
