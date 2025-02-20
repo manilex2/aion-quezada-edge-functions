@@ -119,7 +119,7 @@ app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.
     // Obtener el RUC del cliente desde client
     const { data: clientData, error: clientError } = await supabase
       .from("client")
-      .select("id_number")
+      .select("id_number, client_name")
       .eq("id", client_id)
       .single();
 
@@ -128,6 +128,7 @@ app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.
     }
 
     const ruc_cliente = clientData.id_number || "RUC desconocido";
+    const nombre_cliente = clientData.client_name || "Cliente desconocido"
 
     // Obtener la fecha actual en formato "MM-YYYY"
     const fechaActual = DateTime.now().setZone("America/Guayaquil");
@@ -216,8 +217,8 @@ app.post('/reportePDF/reportePDFRegFac', cors(corsOptions), async (req: express.
     const duration_total = regFacturable.reduce((sum, row) => sum + (row.duration_to_bill ?? 0), 0);
     const value_total = regFacturable.reduce((sum, row) => sum + (row.total_value ?? 0), 0);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "reg_facturable", value_total, nombre_caso));
-    const pdfBuffer2 = Buffer.from(await createPdf(data, logo, codigoFinal, "", value_total, nombre_caso));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "reg_facturable", value_total, nombre_cliente, nombre_caso));
+    const pdfBuffer2 = Buffer.from(await createPdf(data, logo, codigoFinal, "", value_total, nombre_cliente, nombre_caso));
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
@@ -544,7 +545,7 @@ app.post('/reportePDF/reportePDFCajaChicaInterna', cors(corsOptions), async (req
     // Calcular duration_total y value_total
     const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_interna", value_total, undefined, allSoportes));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_interna", value_total, undefined, undefined, allSoportes));
 
     const { data: cajaChicaSaldos, error: cajaChicaSaldosError} = await supabase
       .from("caja_chica_saldos")
@@ -740,7 +741,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req
     // Obtener el RUC del cliente desde client
     const { data: clientData, error: clientError } = await supabase
       .from("client")
-      .select("id_number")
+      .select("id_number, client_name")
       .eq("id", client_id)
       .single();
 
@@ -749,6 +750,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req
     }
 
     const ruc_cliente = clientData.id_number || "RUC desconocido";
+    const nombre_cliente = clientData.client_name || "Cliente desconocido"
 
     // Obtener la fecha actual en formato "MM-YYYY"
     const fechaActual = DateTime.now().setZone("America/Guayaquil");
@@ -884,7 +886,7 @@ app.post('/reportePDF/reportePDFCajaChicaCliente', cors(corsOptions), async (req
     // Calcular duration_total y value_total
     const value_total = cajaChicaReg.reduce((sum, row) => sum + (row.value ?? 0), 0);
 
-    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_cliente", value_total, nombre_caso, allSoportes));
+    const pdfBuffer = Buffer.from(await createPdf(data, logo, codigoFinal, "caja_chica_cliente", value_total, nombre_cliente, nombre_caso, allSoportes));
 
     // Subir el PDF a Supabase Storage
     const bucketName = 'files';
@@ -998,7 +1000,7 @@ type RowData = {
   detalle?: string | null;
 };
 
-async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, valor_total: number, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
+async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string, tipoLiq: string, valor_total: number, cliente?: string, nombre_caso?: string, soportes?: Array<{ tipo: string; soporte: Uint8Array }>) {
   const pdfDoc = await PDFDocument.create();
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold); // Fuente en negritas
@@ -1074,8 +1076,26 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
     });
   }
 
+  if (cliente) {
+    page.drawText('Cliente:', {
+      x: 35,
+      y: height - 200,
+      size: fontSize,
+      font: helveticaFont,
+      color: rgb(0.737, 0.549, 0.361),
+    });
+  
+    page.drawText(cliente, {
+      x: 35,
+      y: height - 220,
+      size: fontSize,
+      font: helveticaFont,
+      color: rgb(0, 0, 0),
+    });  
+  }
+
   page.drawText('VALOR TOTAL DE LIQUIDACIÓN:', {
-    x: 35,
+    x: 235,
     y: height - 200,
     size: fontSize,
     font: helveticaFont,
@@ -1083,7 +1103,7 @@ async function createPdf(data: RowData[], logoBytes: Uint8Array, codigo: string,
   });
 
   page.drawText(`$${valor_total.toFixed(2)}`, {
-    x: 35,
+    x: 235,
     y: height - 220,
     size: fontSize,
     font: helveticaFont,
@@ -1297,10 +1317,10 @@ function formatDate(timestamp: string | null): string | null {
   if (timestamp === null) {
     return null;
   }
-  const date = new Date(timestamp);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
-  const year = date.getFullYear();
+  const date = DateTime.fromISO(timestamp, { setZone: true });
+  const day = String(date.day).padStart(2, '0');
+  const month = String(date.month).padStart(2, '0'); // Los meses empiezan en 0
+  const year = date.year;
   return `${day}/${month}/${year}`;
 }
 
@@ -1309,9 +1329,9 @@ function formatHour(timestamp: string | null): string | null {
   if (timestamp === null) {
     return null;
   }
-  const date = new Date(timestamp);
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
+  const date = DateTime.fromISO(timestamp, { setZone: true });
+  const hour = String(date.hour).padStart(2, '0');
+  const minute = String(date.minute).padStart(2, '0');
   return `${hour}:${minute}`;
 }
 
@@ -1374,9 +1394,7 @@ function splitTextIntoLines(text: string, maxWidth: number, fontSize: number, fo
 // Pie de página común en todas las páginas, centrado
 function drawFooter(currentPage: PDFPage, font: PDFFont, footerSize: number, width: number) {
   const footerText = `
-    Dirección: Centro Comercial Plaza Lagos, Km. 6.5 vía Samborondón, Edificio Mirador Este, piso 1 oficina 1.8
-    Teléfonos: 045101683 – 045101460 – 045101398 
-    e-mail: info@estudioquezada.com.ec 
+    Dirección: Centro Comercial Plaza Lagos,
     Samborondón – Ecuador`;
 
   const footerLines = footerText.trim().split('\n');
