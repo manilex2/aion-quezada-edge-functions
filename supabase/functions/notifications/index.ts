@@ -181,17 +181,18 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser(accessToken);
+      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        // Verificar si el token es válido obteniendo los datos del usuario
+        const { data: user, error } = await supabase.auth.getUser(accessToken);
 
-      if (!accessToken) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        if (!accessToken) {
+          throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        }
+        
+        if (error || !user) {
+          throw 'UNAUTHORIZED: Token de autorización inválido.';
+        }
       }
-      
-      if (error || !user) {
-        throw 'UNAUTHORIZED: Token de autorización inválido.';
-      }
-
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
@@ -368,17 +369,18 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser(accessToken);
+      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        // Verificar si el token es válido obteniendo los datos del usuario
+        const { data: user, error } = await supabase.auth.getUser(accessToken);
 
-      if (!accessToken) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        if (!accessToken) {
+          throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        }
+        
+        if (error || !user) {
+          throw 'UNAUTHORIZED: Token de autorización inválido.';
+        }
       }
-      
-      if (error || !user) {
-        throw 'UNAUTHORIZED: Token de autorización inválido.';
-      }
-
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
@@ -642,17 +644,18 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser(accessToken);
+      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        // Verificar si el token es válido obteniendo los datos del usuario
+        const { data: user, error } = await supabase.auth.getUser(accessToken);
 
-      if (!accessToken) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        if (!accessToken) {
+          throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        }
+        
+        if (error || !user) {
+          throw 'UNAUTHORIZED: Token de autorización inválido.';
+        }
       }
-      
-      if (error || !user) {
-        throw 'UNAUTHORIZED: Token de autorización inválido.';
-      }
-
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
@@ -809,17 +812,18 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser(accessToken);
+      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        // Verificar si el token es válido obteniendo los datos del usuario
+        const { data: user, error } = await supabase.auth.getUser(accessToken);
 
-      if (!accessToken) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        if (!accessToken) {
+          throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        }
+        
+        if (error || !user) {
+          throw 'UNAUTHORIZED: Token de autorización inválido.';
+        }
       }
-      
-      if (error || !user) {
-        throw 'UNAUTHORIZED: Token de autorización inválido.';
-      }
-
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
@@ -976,17 +980,18 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
-      // Verificar si el token es válido obteniendo los datos del usuario
-      const { data: user, error } = await supabase.auth.getUser(accessToken);
+      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        // Verificar si el token es válido obteniendo los datos del usuario
+        const { data: user, error } = await supabase.auth.getUser(accessToken);
 
-      if (!accessToken) {
-        throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        if (!accessToken) {
+          throw `FORBIDDEN: Prohibido: Falta el token de autenticación.`;
+        }
+        
+        if (error || !user) {
+          throw 'UNAUTHORIZED: Token de autorización inválido.';
+        }
       }
-      
-      if (error || !user) {
-        throw 'UNAUTHORIZED: Token de autorización inválido.';
-      }
-
     } else {
       console.log("ENTORNO: DESARROLLO");
       supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
