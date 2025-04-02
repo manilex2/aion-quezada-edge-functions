@@ -173,15 +173,15 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
   
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
-        global: {
-          headers: { Authorization: req.headers.authorization! }
-        }
-      });
       // Primero tomar el token del header de autorizacion
-      accessToken = req.headers.authorization!.replace('Bearer ', '')
+      accessToken = req.headers.authorization!.replace('Bearer ', '');
 
-      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+      if (accessToken != Deno.env.get("SB_SERVICE_ROLE")!) {
+        supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          global: {
+            headers: { Authorization: req.headers.authorization! }
+          }
+        });
         // Verificar si el token es válido obteniendo los datos del usuario
         const { data: user, error } = await supabase.auth.getUser(accessToken);
 
@@ -192,6 +192,13 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
         if (error || !user) {
           throw 'UNAUTHORIZED: Token de autorización inválido.';
         }
+      } else {
+        supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
       }
     } else {
       console.log("ENTORNO: DESARROLLO");
@@ -361,15 +368,15 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
   
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
-        global: {
-          headers: { Authorization: req.headers.authorization! }
-        }
-      });
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
       if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          global: {
+            headers: { Authorization: req.headers.authorization! }
+          }
+        });
         // Verificar si el token es válido obteniendo los datos del usuario
         const { data: user, error } = await supabase.auth.getUser(accessToken);
 
@@ -380,6 +387,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
         if (error || !user) {
           throw 'UNAUTHORIZED: Token de autorización inválido.';
         }
+      } else {
+        supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
       }
     } else {
       console.log("ENTORNO: DESARROLLO");
@@ -636,15 +650,15 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
   
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
-        global: {
-          headers: { Authorization: req.headers.authorization! }
-        }
-      });
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
       if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          global: {
+            headers: { Authorization: req.headers.authorization! }
+          }
+        });
         // Verificar si el token es válido obteniendo los datos del usuario
         const { data: user, error } = await supabase.auth.getUser(accessToken);
 
@@ -655,6 +669,13 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
         if (error || !user) {
           throw 'UNAUTHORIZED: Token de autorización inválido.';
         }
+      } else {
+        supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
       }
     } else {
       console.log("ENTORNO: DESARROLLO");
@@ -804,15 +825,15 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
   
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
-        global: {
-          headers: { Authorization: req.headers.authorization! }
-        }
-      });
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
       if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          global: {
+            headers: { Authorization: req.headers.authorization! }
+          }
+        });
         // Verificar si el token es válido obteniendo los datos del usuario
         const { data: user, error } = await supabase.auth.getUser(accessToken);
 
@@ -823,6 +844,13 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
         if (error || !user) {
           throw 'UNAUTHORIZED: Token de autorización inválido.';
         }
+      } else {
+        supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
       }
     } else {
       console.log("ENTORNO: DESARROLLO");
@@ -972,15 +1000,15 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
   
     if (Deno.env.get("SB_KEY") === Deno.env.get("SUPABASE_ANON_KEY") && !req.body.test) {
       console.log("ENTORNO: PRODUCCIÓN");
-      supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
-        global: {
-          headers: { Authorization: req.headers.authorization! }
-        }
-      });
       // Primero tomar el token del header de autorizacion
       accessToken = req.headers.authorization!.replace('Bearer ', '')
 
       if (accessToken != Deno.env.get("SB_SERVICE_ROLE")) {
+        supabase = createClient<Database>(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          global: {
+            headers: { Authorization: req.headers.authorization! }
+          }
+        });
         // Verificar si el token es válido obteniendo los datos del usuario
         const { data: user, error } = await supabase.auth.getUser(accessToken);
 
@@ -991,6 +1019,13 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
         if (error || !user) {
           throw 'UNAUTHORIZED: Token de autorización inválido.';
         }
+      } else {
+        supabase = createClient<Database>(Deno.env.get("SB_URL")!, Deno.env.get("SB_SERVICE_ROLE")!, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
       }
     } else {
       console.log("ENTORNO: DESARROLLO");
