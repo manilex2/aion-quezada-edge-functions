@@ -765,10 +765,10 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
 
     if (notifEmailCounterTotal == 0) {
       console.log('No hay notificaciones email pendientes para trámites.');
-      message = 'y no hay notificaciones email pendientes para trámites.';
+      message += 'y no hay notificaciones email pendientes para trámites.';
     } else {
       console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message = `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      message += `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
 
     res.status(201).send({ message });
@@ -996,10 +996,10 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
 
     if (notifEmailCounterTotal == 0) {
       console.log('No hay notificaciones email pendientes para caja chica.');
-      message = 'y no hay notificaciones email pendientes para caja chica.';
+      message += 'y no hay notificaciones email pendientes para caja chica.';
     } else {
       console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message = `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      message += `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
     res.status(201).send({ message });
   } catch (error) {
@@ -1226,10 +1226,10 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
 
     if (notifEmailCounterTotal == 0) {
       console.log('No hay notificaciones email pendientes para registros facturables.');
-      message = 'y no hay notificaciones email pendientes para registros facturables.';
+      message += 'y no hay notificaciones email pendientes para registros facturables.';
     } else {
       console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message = `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      message += `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
     res.status(201).send({ message });
   } catch (error) {
