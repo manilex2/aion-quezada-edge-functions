@@ -620,7 +620,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             from: `${Deno.env.get("SENDGRID_SENDER_NAME")} <${Deno.env.get("SENDGRID_SENDER_EMAIL")}>`,
             to: userData.email, // Enviar directamente al usuario
             bcc: adminEmails.join(', '), // Enviar a los administradores en BCC
-            subject: `Trámite Post-vencimiento`,
+            subject: `Trámite Vencido`,
             html: `
               <h2>TRÁMITE VENCIDO</h2>
               <p>El trámite <strong>${tramite.tramite_name}</strong> asignado al usuario <strong>${userData.display_name}</strong> venció el <strong>${fechaFormateada}</strong>. Le recomendamos tomar las acciones pertinentes.</p>
