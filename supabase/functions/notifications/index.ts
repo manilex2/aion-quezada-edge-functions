@@ -385,8 +385,8 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
       console.log('No hay notificaciones push pendientes para actividades.');
       res.status(201).send({ message: "No hay notificaciones push pendientes para actividades." });
     } else {
-      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de actividades exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
-      res.status(201).send({ message: `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de actividades exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.` })
+      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de actividades exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      res.status(201).send({ message: `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de actividades exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.` })
     }
   } catch (error) {
     const errorJSON = JSON.stringify(error);
@@ -759,16 +759,16 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       console.log('No hay notificaciones push pendientes para trámites.');
       message = 'No hay notificaciones push pendientes para trámites ';
     } else {
-      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
-      message = `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
     }
 
     if (notifEmailCounterTotal == 0) {
       console.log('No hay notificaciones email pendientes para trámites.');
       message += 'y no hay notificaciones email pendientes para trámites.';
     } else {
-      console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message += `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      console.log(`De ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message += `y de ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
 
     res.status(201).send({ message });
@@ -990,16 +990,16 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
       console.log('No hay notificaciones push pendientes para caja chica.');
       message = 'No hay notificaciones push pendientes para caja chica ';
     } else {
-      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de caja chica exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
-      message = `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de caja chica exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de caja chica exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de caja chica exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
     }
 
     if (notifEmailCounterTotal == 0) {
       console.log('No hay notificaciones email pendientes para caja chica.');
       message += 'y no hay notificaciones email pendientes para caja chica.';
     } else {
-      console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message += `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      console.log(`De ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message += `y de ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
     res.status(201).send({ message });
   } catch (error) {
@@ -1220,16 +1220,16 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
       console.log('No hay notificaciones push pendientes para registros facturables.');
       message = 'No hay notificaciones push pendientes para registros facturables ';
     } else {
-      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de registros facturables exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
-      message = `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de registros facturables exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de registros facturables exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de registros facturables exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
     }
 
     if (notifEmailCounterTotal == 0) {
       console.log('No hay notificaciones email pendientes para registros facturables.');
       message += 'y no hay notificaciones email pendientes para registros facturables.';
     } else {
-      console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message += `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      console.log(`De ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message += `y de ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
     res.status(201).send({ message });
   } catch (error) {
@@ -1486,8 +1486,8 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       console.log('No hay notificaciones push pendientes para habilitantes.');
       res.status(201).send({ message: "No hay notificaciones push pendientes para habilitantes." });
     } else {
-      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de habilitantes exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
-      res.status(201).send({ message: `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de habilitantes exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.` })
+      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones de habilitantes exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      res.status(201).send({ message: `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de habilitantes exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.` })
     }
   } catch (error) {
     const errorJSON = JSON.stringify(error);
