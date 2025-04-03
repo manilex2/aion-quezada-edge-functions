@@ -291,7 +291,7 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               read: false,
               user_id: actividad.responsible_id,
               related_id: actividad.id,
-              notification_title: "Actividad Vencida",
+              notification_title: "Actividad Por Vencer",
               notification_text: `Su actividad asignada '${actividad.activity_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
           if (pushDataError) {
@@ -346,7 +346,7 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               read: false,
               user_id: actividad.responsible_id,
               related_id: actividad.id,
-              notification_title: "Actividad Post-vencimiento",
+              notification_title: "Actividad Vencida",
               notification_text: `Su actividad asignada '${actividad.activity_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
             })
           if (pushDataError) {
@@ -522,7 +522,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               read: false,
               user_id: tramite.responsible_id,
               related_id: tramite.id,
-              notification_title: "Trámite Vencido",
+              notification_title: "Trámite Por Vencer",
               notification_text: `Su trámite asignado ${tramite.tramite_name} vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
           if (pushDataError) {
@@ -658,7 +658,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                 read: false,
                 user_id: tramite.responsible_id,
                 related_id: tramite.id,
-                notification_title: "Trámite Post-vencimiento",
+                notification_title: "Trámite Vencido",
                 notification_text: `Su trámite asignado ${tramite.tramite_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
               });
             if (pushDataError) {
@@ -688,7 +688,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                   read: false,
                   user_id: admin.id,
                   related_id: tramite.id,
-                  notification_title: "Trámite Post-vencimiento",
+                  notification_title: "Trámite Vencido",
                   notification_text: `El trámite ${tramite.tramite_name} asignado a ${userData.display_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
                 })
               if (pushDataError) {
@@ -1277,7 +1277,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               read: false,
               user_id: userClient?.id || null,
               related_id: habilitante.id,
-              notification_title: "Actividad Vencida",
+              notification_title: "Habilitante Por Vencer",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
           if (pushDataError) {
@@ -1332,7 +1332,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               read: false,
               user_id: userClient?.id || null,
               related_id: habilitante.id,
-              notification_title: "Actividad Post-vencimiento",
+              notification_title: "Habilitante Vencida",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
             })
           if (pushDataError) {
@@ -1356,8 +1356,8 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       }
     }
 
-    console.log("Notificaciones push de actividades enviadas correctamente.");
-    res.status(201).send({ message: "Notificaciones push de actividades enviadas correctamente." });
+    console.log("Notificaciones push de habilitantes enviadas correctamente.");
+    res.status(201).send({ message: "Notificaciones push de habilitantes enviadas correctamente." });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
