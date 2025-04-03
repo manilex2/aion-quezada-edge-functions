@@ -138,7 +138,7 @@ app.post('/notifications/customEmail', cors(corsOptions), async (req: express.Re
       throw new Error(error);
     }
 
-    console.log("OK");
+    console.log("Correo electrónico enviado correctamente.");
     res.status(201).send({ message: "Correo electrónico enviado correctamente." });
   } catch (error) {
     console.log(JSON.stringify(error));
@@ -224,6 +224,7 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
       .from('actividades')
       .select('*')
       .eq("close", false)
+      .eq('notif_push_pre', false)
       .gte("end_date_planned", dayBefore.toISOString())
       .lt("end_date_planned", day2Before.toISOString());
 
@@ -244,11 +245,22 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               related_id: actividad.id,
               notification_title: "Actividad Por Vencer",
               notification_text: `Su actividad asignada '${actividad.activity_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
+            });
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de prevencimiento de la actividad: ${actividad.activity_name} fue enviada correctamente`);
+          const { error: notifActividadError } = await supabase
+            .from('actividades')
+            .update({
+              notif_push_pre: true
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
-              continue;
-            }
+            .eq('id', actividad.id);
+          if (notifActividadError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de prevencimiento de la actividad:", notifActividadError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
@@ -260,6 +272,7 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
       .from('actividades')
       .select('*')
       .eq("close", false)
+      .eq('notif_push_exp', false)
       .gte("end_date_planned", today.toISOString())
       .lt("end_date_planned", dayBefore.toISOString());
 
@@ -281,10 +294,21 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               notification_title: "Actividad Vencida",
               notification_text: `Su actividad asignada '${actividad.activity_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
-              continue;
-            }
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de vencimiento de la actividad: ${actividad.activity_name} fue enviada correctamente`);
+          const { error: notifActividadError } = await supabase
+            .from('actividades')
+            .update({
+              notif_push_exp: true
+            })
+            .eq('id', actividad.id);
+          if (notifActividadError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de vencimiento de la actividad:", notifActividadError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
@@ -296,6 +320,7 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
       .from('actividades')
       .select('*')
       .eq("close", false)
+      .eq('notif_push_post', false)
       .lt("end_date_planned", today.toISOString());
 
     if (actividadesDespuesDataError) {
@@ -324,17 +349,28 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               notification_title: "Actividad Post-vencimiento",
               notification_text: `Su actividad asignada '${actividad.activity_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
-              continue;
-            }
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de postvencimiento de la actividad: ${actividad.activity_name} fue enviada correctamente`);
+          const { error: notifActividadError } = await supabase
+            .from('actividades')
+            .update({
+              notif_push_post: true
+            })
+            .eq('id', actividad.id);
+          if (notifActividadError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento de la actividad:", notifActividadError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
       }
     }
 
-    console.log("OK");
+    console.log("Notificaciones push de actividades enviadas correctamente.");
     res.status(201).send({ message: "Notificaciones push de actividades enviadas correctamente." });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
@@ -419,6 +455,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       .from('client_tramites')
       .select('*')
       .eq("close", false)
+      .eq('notif_push_pre', false)
       .gte("end_date_planned", dayBefore.toISOString())
       .lt("end_date_planned", day2Before.toISOString());
 
@@ -440,10 +477,21 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               notification_title: "Trámite Por Vencer",
               notification_text: `Su trámite asignado '${tramite.tramite_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push del trámite:", pushDataError);
-              continue;
-            }
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de prevencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
+          const { error: notifTramiteError } = await supabase
+            .from('client_tramites')
+            .update({
+              notif_push_pre: true
+            })
+            .eq('id', tramite.id);
+          if (notifTramiteError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de prevencimiento del tramite:", notifTramiteError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
@@ -455,6 +503,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       .from('client_tramites')
       .select('*')
       .eq("close", false)
+      .eq('notif_push_exp', false)
       .gte("end_date_planned", today.toISOString())
       .lt("end_date_planned", dayBefore.toISOString());
 
@@ -476,10 +525,21 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               notification_title: "Trámite Vencido",
               notification_text: `Su trámite asignado ${tramite.tramite_name} vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push del trámite:", pushDataError);
-              continue;
-            }
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de vencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
+          const { error: notifTramiteError } = await supabase
+            .from('client_tramites')
+            .update({
+              notif_push_exp: true
+            })
+            .eq('id', tramite.id);
+          if (notifTramiteError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de vencimiento del tramite:", notifTramiteError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
@@ -491,6 +551,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       .from('client_tramites')
       .select('*')
       .eq("close", false)
+      .or('notif_email_post.eq.false, notif_push_post.eq.false, notif_push_admin_post.eq.false')
       .lt("end_date_planned", today.toISOString());
 
     if (tramitesDespuesDataError) {
@@ -526,7 +587,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
           }
           const { data: adminData, error: adminDataError } = await supabase
             .from('users')
-            .select('id, email')
+            .select('id, email, display_name')
             .eq('rol_name', 'Administrador')
           if (adminDataError) {
             console.error("Error al obtener los administradores para enviar el email del trámite:", adminDataError);
@@ -569,29 +630,25 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             `,
           };
           try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log("Correo enviado exitosamente:", info);
+            if (tramite.notif_email_post == false) {
+              const info = await transporter.sendMail(mailOptions);
+              console.log("Correo enviado exitosamente:", info);
+              const { error: notifTramiteError } = await supabase
+                .from('client_tramites')
+                .update({
+                  notif_email_post: true
+                })
+                .eq('id', tramite.id);
+              if (notifTramiteError) {
+                console.error("Error al actualizar el estatus de la Notificación Email de posvencimiento del tramite:", notifTramiteError);
+                continue;
+              }
+            }
           } catch (error) {
             console.error("Error al enviar el correo:", error);
             continue;
           }
-          const { error: pushDataError } = await supabase
-            .from("notifications_push")
-            .insert({
-              email: true,
-              category: "Postvencimiento",
-              new: true,
-              read: false,
-              user_id: tramite.responsible_id,
-              related_id: tramite.id,
-              notification_title: "Trámite Post-vencimiento",
-              notification_text: `Su trámite asignado ${tramite.tramite_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
-            });
-          if (pushDataError) {
-            console.error("Error al guardar la notificacion push del trámite:", pushDataError);
-            continue;
-          }
-          for (const admin of adminData) {
+          if (tramite.notif_push_post == false) {
             const { error: pushDataError } = await supabase
               .from("notifications_push")
               .insert({
@@ -599,13 +656,55 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                 category: "Postvencimiento",
                 new: true,
                 read: false,
-                user_id: admin.id,
+                user_id: tramite.responsible_id,
                 related_id: tramite.id,
                 notification_title: "Trámite Post-vencimiento",
-                notification_text: `El trámite ${tramite.tramite_name} asignado a ${userData.display_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
-              })
+                notification_text: `Su trámite asignado ${tramite.tramite_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
+              });
             if (pushDataError) {
               console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+              continue;
+            }
+            console.log(`Notificación Push de postvencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
+            const { error: notifTramiteError } = await supabase
+              .from('client_tramites')
+              .update({
+                notif_push_post: true
+              })
+              .eq('id', tramite.id);
+            if (notifTramiteError) {
+              console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento del tramite:", notifTramiteError);
+              continue;
+            }
+          }
+          if (tramite.notif_push_admin_post == false) {
+            for (const admin of adminData) {
+              const { error: pushDataError } = await supabase
+                .from("notifications_push")
+                .insert({
+                  email: false,
+                  category: "Postvencimiento",
+                  new: true,
+                  read: false,
+                  user_id: admin.id,
+                  related_id: tramite.id,
+                  notification_title: "Trámite Post-vencimiento",
+                  notification_text: `El trámite ${tramite.tramite_name} asignado a ${userData.display_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
+                })
+              if (pushDataError) {
+                console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+                continue;
+              }
+              console.log(`Notificación Push de postvencimiento del tramite: ${tramite.tramite_name} para el admin ${admin.display_name} fue enviada correctamente`);
+            }
+            const { error: notifTramiteError } = await supabase
+              .from('client_tramites')
+              .update({
+                notif_push_admin_post: true
+              })
+              .eq('id', tramite.id);
+            if (notifTramiteError) {
+              console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento de Admin del tramite:", notifTramiteError);
               continue;
             }
           }
@@ -616,7 +715,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       }
     }
 
-    console.log("OK");
+    console.log("Notificaciones push de trámites enviadas correctamente.");
     res.status(201).send({ message: "Notificaciones push de trámites enviadas correctamente." });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
@@ -698,6 +797,7 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
       .from('caja_chica_registros')
       .select('*')
       .eq("client_liquidation", false)
+      .or('notif_push_pre.eq.false, notif_email_pre.eq.false')
       .lte("date", tenDaysAgo.toISOString());
 
     if (cajaChicaDataError) {
@@ -724,7 +824,7 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
         try {
           const { data: supervisorData, error: supervisorDataError } = await supabase
             .from('users')
-            .select('id, email')
+            .select('id, email, display_name')
             .eq('rol_name', 'Supervisor')
           if (supervisorDataError) {
             console.error("Error al obtener los supervisores para enviar el email del registro de caja chica.", supervisorDataError);
@@ -761,27 +861,52 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
             `,
           };
           try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log("Correo enviado exitosamente:", info);
+            if (cajaChica.notif_email_pre == false) {
+              const info = await transporter.sendMail(mailOptions);
+              console.log("Correo enviado exitosamente:", info);
+              const { error: notifCajaChicaError } = await supabase
+                .from('caja_chica_registros')
+                .update({
+                  notif_email_pre: true
+                })
+                .eq('id', cajaChica.id);
+              if (notifCajaChicaError) {
+                console.error("Error al actualizar el estatus de la Notificación Email de 10 días de antelación de caja chica:", notifCajaChicaError);
+                continue;
+              }
+            }
           } catch (error) {
             console.error("Error al enviar el correo:", error);
             continue;
           }
-          for (const supervisor of supervisorData) {
-            const { error: pushDataError } = await supabase
-              .from("notifications_push")
-              .insert({
-                email: true,
-                category: "Caja Chica No Liquidada",
-                new: true,
-                read: false,
-                user_id: supervisor.id,
-                related_id: cajaChica.id,
-                notification_title: "Caja Chica Sin Liquidar",
-                notification_text: `La caja chica por concepto de ${cajaChica.concept} de ${fechaFormateada} aún no ha sido liquidada. Le recomendamos tomar las acciones pertinentes.`
+          if (cajaChica.notif_push_pre == false) {
+            for (const supervisor of supervisorData) {
+              const { error: pushDataError } = await supabase
+                .from("notifications_push")
+                .insert({
+                  email: true,
+                  category: "Caja Chica No Liquidada",
+                  new: true,
+                  read: false,
+                  user_id: supervisor.id,
+                  related_id: cajaChica.id,
+                  notification_title: "Caja Chica Sin Liquidar",
+                  notification_text: `La caja chica por concepto de ${cajaChica.concept} de ${fechaFormateada} aún no ha sido liquidada. Le recomendamos tomar las acciones pertinentes.`
+                })
+              if (pushDataError) {
+                console.error("Error al guardar la notificacion push del registro de caja chica:", pushDataError);
+                continue;
+              }
+              console.log(`Notificación Push de 10 días de antelación de caja chica: ${cajaChica.concept} al supervisor ${supervisor.display_name} fue enviada correctamente`);
+            }
+            const { error: notifCajaChicaError } = await supabase
+              .from('caja_chica_registros')
+              .update({
+                notif_push_pre: true
               })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push del registro de caja chica:", pushDataError);
+              .eq('id', cajaChica.id);
+            if (notifCajaChicaError) {
+              console.error("Error al actualizar el estatus de la Notificación Push de 10 días de antelación de caja chica:", notifCajaChicaError);
               continue;
             }
           }
@@ -791,7 +916,7 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
       }
     }
 
-    console.log("OK");
+    console.log("Notificaciones push de caja chica enviadas correctamente.");
     res.status(201).send({ message: "Notificaciones push de caja chica enviadas correctamente." });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
@@ -873,6 +998,7 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
       .from('reg_facturable')
       .select('*')
       .eq("is_liquidated", false)
+      .or("notif_push_pre.eq.false, notif_email_pre.eq.false")
       .lte("created_at", tenDaysAgo.toISOString());
 
     if (regFacturableDataError) {
@@ -899,7 +1025,7 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
         try {
           const { data: supervisorData, error: supervisorDataError } = await supabase
             .from('users')
-            .select('id, email')
+            .select('id, email, display_name')
             .eq('rol_name', 'Supervisor')
           if (supervisorDataError) {
             console.error("Error al obtener los supervisores para enviar el email del registro facturable.", supervisorDataError);
@@ -936,27 +1062,52 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
             `,
           };
           try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log("Correo enviado exitosamente:", info);
+            if (registroFacturable.notif_email_pre == false) {
+              const info = await transporter.sendMail(mailOptions);
+              console.log("Correo enviado exitosamente:", info);
+              const { error: notifRegFacturableError } = await supabase
+                .from('reg_facturable')
+                .update({
+                  notif_email_pre: true
+                })
+                .eq('id', registroFacturable.id);
+              if (notifRegFacturableError) {
+                console.error("Error al actualizar el estatus de la Notificación Email de 10 días de antelación del registro facturable:", notifRegFacturableError);
+                continue;
+              }
+            }
           } catch (error) {
             console.error("Error al enviar el correo:", error);
             continue;
           }
-          for (const supervisor of supervisorData) {
-            const { error: pushDataError } = await supabase
-              .from("notifications_push")
-              .insert({
-                email: true,
-                category: "Registro Facturable No Liquidado",
-                new: true,
-                read: false,
-                user_id: supervisor.id,
-                related_id: registroFacturable.id,
-                notification_title: "Registro Facturable Sin Liquidar",
-                notification_text: `El registro facturable por concepto de ${registroFacturable.activity} de ${fechaFormateada} aún no ha sido liquidado. Le recomendamos tomar las acciones pertinentes.`
+          if (registroFacturable.notif_push_pre == false) {
+            for (const supervisor of supervisorData) {
+              const { error: pushDataError } = await supabase
+                .from("notifications_push")
+                .insert({
+                  email: true,
+                  category: "Registro Facturable No Liquidado",
+                  new: true,
+                  read: false,
+                  user_id: supervisor.id,
+                  related_id: registroFacturable.id,
+                  notification_title: "Registro Facturable Sin Liquidar",
+                  notification_text: `El registro facturable por concepto de ${registroFacturable.activity} de ${fechaFormateada} aún no ha sido liquidado. Le recomendamos tomar las acciones pertinentes.`
+                })
+              if (pushDataError) {
+                console.error("Error al guardar la notificacion push del registro facturable:", pushDataError);
+                continue;
+              }
+              console.log(`Notificación Push de 10 días de antelación de registro facturable: ${registroFacturable.activity} al supervisor ${supervisor.display_name} fue enviada correctamente`);
+            }
+            const { error: notifRegFacturableError } = await supabase
+              .from('reg_facturable')
+              .update({
+                notif_push_pre: true
               })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push del registro facturable:", pushDataError);
+              .eq('id', registroFacturable.id);
+            if (notifRegFacturableError) {
+              console.error("Error al actualizar el estatus de la Notificación Push de 10 días de antelación de registro facturable:", notifRegFacturableError);
               continue;
             }
           }
@@ -966,7 +1117,7 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
       }
     }
 
-    console.log("OK");
+    console.log("Notificaciones push de registros facturables enviadas correctamente.");
     res.status(201).send({ message: "Notificaciones push de registros facturables enviadas correctamente." });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
@@ -1050,8 +1201,17 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
     const { data: habilitantesAntesData, error: habilitantesAntesDataError } = await supabase
       .from('habilitantes')
       .select('*')
+      .eq('notif_push_pre', false)
       .gte("exp_date", dayBefore.toISOString())
       .lt("exp_date", day2Before.toISOString());
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*');
+      
+    if (userError) {
+      console.error("Error al obtener usuarios:", userError);
+    }
 
     if (habilitantesAntesDataError) {
       console.error("Error al obtener las habilitantes:", habilitantesAntesDataError);
@@ -1059,6 +1219,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       console.log("Habilitantes del día anterior:", habilitantesAntesData);
       for (const habilitante of habilitantesAntesData) {
         try {
+          const userClient = userData?.findLast((user) => user.client_id == habilitante.client_id);
           const { error: pushDataError } = await supabase
             .from("notifications_push")
             .insert({
@@ -1066,15 +1227,26 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               category: "Prevencimiento",
               new: true,
               read: false,
-              user_id: habilitante.client_id,
+              user_id: userClient?.id || null,
               related_id: habilitante.id,
               notification_title: "Habilitante Por Vencer",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
-              continue;
-            }
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de prevencimiento de la habilitante: ${habilitante.habilitantes_name} fue enviada correctamente`);
+          const { error: notifHabilitanteError } = await supabase
+            .from('habilitantes')
+            .update({
+              notif_push_pre: true
+            })
+            .eq('id', habilitante.id);
+          if (notifHabilitanteError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de prevencimiento de la habilitante:", notifHabilitanteError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
@@ -1085,6 +1257,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
     const { data: habilitantesActualData, error: habilitantesActualDataError } = await supabase
       .from('habilitantes')
       .select('*')
+      .eq('notif_push_exp', false)
       .gte("exp_date", today.toISOString())
       .lt("exp_date", dayBefore.toISOString());
 
@@ -1094,6 +1267,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       console.log("Habilitantes del día actual:", habilitantesActualData);
       for (const habilitante of habilitantesActualData) {
         try {
+          const userClient = userData?.findLast((user) => user.client_id == habilitante.client_id);
           const { error: pushDataError } = await supabase
             .from("notifications_push")
             .insert({
@@ -1101,15 +1275,26 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               category: "Vencimiento",
               new: true,
               read: false,
-              user_id: habilitante.client_id,
+              user_id: userClient?.id || null,
               related_id: habilitante.id,
               notification_title: "Actividad Vencida",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
-            if (pushDataError) {
-              console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
-              continue;
-            }
+          if (pushDataError) {
+            console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
+            continue;
+          }
+          console.log(`Notificación Push de vencimiento de la habilitante: ${habilitante.habilitantes_name} fue enviada correctamente`);
+          const { error: notifHabilitanteError } = await supabase
+            .from('habilitantes')
+            .update({
+              notif_push_exp: true
+            })
+            .eq('id', habilitante.id);
+          if (notifHabilitanteError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de vencimiento de la habilitante:", notifHabilitanteError);
+            continue;
+          }
         } catch (error) {
           throw new Error(error);
         }
@@ -1120,7 +1305,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
     const { data: habilitantesDespuesData, error: habilitantesDespuesDataError } = await supabase
       .from('habilitantes')
       .select('*')
-      .eq("notif_post", false)
+      .eq("notif_push_post", false)
       .lt("exp_date", today.toISOString());
 
     if (habilitantesDespuesDataError) {
@@ -1137,6 +1322,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
         
         const fechaFormateada = vencimiento.toLocaleDateString('es-ES', opciones);
         try {
+          const userClient = userData?.findLast((user) => user.client_id == habilitante.client_id);
           const { error: pushDataError } = await supabase
             .from("notifications_push")
             .insert({
@@ -1144,7 +1330,7 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               category: "Postvencimiento",
               new: true,
               read: false,
-              user_id: habilitante.client_id,
+              user_id: userClient?.id || null,
               related_id: habilitante.id,
               notification_title: "Actividad Post-vencimiento",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
@@ -1153,25 +1339,24 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
             console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
             continue;
           }
-
-          const { error: habilitanteUpdateError } = await supabase
-            .from("habilitantes")
+          console.log(`Notificación Push de posvencimiento de la habilitante: ${habilitante.habilitantes_name} fue enviada correctamente`);
+          const { error: notifHabilitanteError } = await supabase
+            .from('habilitantes')
             .update({
-              notif_post: true,
+              notif_push_post: true
             })
-            .eq("id", habilitante.id)
-          if (habilitanteUpdateError) {
-            console.error("Error al actualizar el estatus de la habilitante:", pushDataError);
+            .eq('id', habilitante.id);
+          if (notifHabilitanteError) {
+            console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento de la habilitante:", notifHabilitanteError);
             continue;
           }
-
         } catch (error) {
           throw new Error(error);
         }
       }
     }
 
-    console.log("OK");
+    console.log("Notificaciones push de actividades enviadas correctamente.");
     res.status(201).send({ message: "Notificaciones push de actividades enviadas correctamente." });
   } catch (error) {
     const errorJSON = JSON.stringify(error);

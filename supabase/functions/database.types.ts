@@ -12,60 +12,120 @@ export type Database = {
       actividades: {
         Row: {
           activity_name: string | null
+          activity_related_id: string | null
           caso_id: string | null
+          client_activity_detail: string | null
           client_id: string | null
           close: boolean | null
           created_at: string
           end_date_planned: string | null
           end_date_real: string | null
+          event_link: string | null
+          event_notes: string | null
+          event_place: string | null
+          guess_list: string[] | null
+          high_priority: boolean | null
           id: string
+          is_activity: boolean | null
+          is_event: boolean | null
+          is_rescheduled: boolean | null
+          is_skip: boolean | null
+          is_task: boolean | null
           last_status: string | null
+          notif_push_exp: boolean
+          notif_push_post: boolean
+          notif_push_pre: boolean
           order: number | null
+          prev_activity_id: string | null
+          process_activity_id: string | null
+          reassigned: boolean | null
           register_by_email: string | null
           register_by_id: string | null
           responsible_id: string | null
           start_date: string | null
           start_date_planned: string | null
           termino: number | null
+          test: boolean | null
           tramite_id: string | null
+          tramite_ingresado: boolean | null
         }
         Insert: {
           activity_name?: string | null
+          activity_related_id?: string | null
           caso_id?: string | null
+          client_activity_detail?: string | null
           client_id?: string | null
           close?: boolean | null
           created_at?: string
           end_date_planned?: string | null
           end_date_real?: string | null
+          event_link?: string | null
+          event_notes?: string | null
+          event_place?: string | null
+          guess_list?: string[] | null
+          high_priority?: boolean | null
           id?: string
+          is_activity?: boolean | null
+          is_event?: boolean | null
+          is_rescheduled?: boolean | null
+          is_skip?: boolean | null
+          is_task?: boolean | null
           last_status?: string | null
+          notif_push_exp?: boolean
+          notif_push_post?: boolean
+          notif_push_pre?: boolean
           order?: number | null
+          prev_activity_id?: string | null
+          process_activity_id?: string | null
+          reassigned?: boolean | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
           start_date?: string | null
           start_date_planned?: string | null
           termino?: number | null
+          test?: boolean | null
           tramite_id?: string | null
+          tramite_ingresado?: boolean | null
         }
         Update: {
           activity_name?: string | null
+          activity_related_id?: string | null
           caso_id?: string | null
+          client_activity_detail?: string | null
           client_id?: string | null
           close?: boolean | null
           created_at?: string
           end_date_planned?: string | null
           end_date_real?: string | null
+          event_link?: string | null
+          event_notes?: string | null
+          event_place?: string | null
+          guess_list?: string[] | null
+          high_priority?: boolean | null
           id?: string
+          is_activity?: boolean | null
+          is_event?: boolean | null
+          is_rescheduled?: boolean | null
+          is_skip?: boolean | null
+          is_task?: boolean | null
           last_status?: string | null
+          notif_push_exp?: boolean
+          notif_push_post?: boolean
+          notif_push_pre?: boolean
           order?: number | null
+          prev_activity_id?: string | null
+          process_activity_id?: string | null
+          reassigned?: boolean | null
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
           start_date?: string | null
           start_date_planned?: string | null
           termino?: number | null
+          test?: boolean | null
           tramite_id?: string | null
+          tramite_ingresado?: boolean | null
         }
         Relationships: [
           {
@@ -103,11 +163,33 @@ export type Database = {
             referencedRelation: "client_tramites"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "actividades_activity_related_id_fkey"
+            columns: ["activity_related_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_prev_activity_id_fkey"
+            columns: ["prev_activity_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_process_activity_id_fkey"
+            columns: ["process_activity_id"]
+            isOneToOne: false
+            referencedRelation: "process_activities"
+            referencedColumns: ["id"]
+          },
         ]
       }
       actividades_avances: {
         Row: {
           activity_id: string | null
+          case_id: string | null
           close: boolean | null
           comment: string | null
           created_at: string
@@ -123,6 +205,7 @@ export type Database = {
         }
         Insert: {
           activity_id?: string | null
+          case_id?: string | null
           close?: boolean | null
           comment?: string | null
           created_at?: string
@@ -138,6 +221,7 @@ export type Database = {
         }
         Update: {
           activity_id?: string | null
+          case_id?: string | null
           close?: boolean | null
           comment?: string | null
           created_at?: string
@@ -173,6 +257,13 @@ export type Database = {
             referencedRelation: "actividades"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "actividades_avances_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       actividades_avances_soportes: {
@@ -187,9 +278,12 @@ export type Database = {
           file_type: string | null
           file_url: string | null
           id: string
+          made_visible_by: string | null
+          made_visible_by_name: string | null
           register_by_email: string | null
           register_by_id: string | null
           tramite_id: string | null
+          visible_to_client: boolean | null
         }
         Insert: {
           activity_id?: string | null
@@ -202,9 +296,12 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          made_visible_by?: string | null
+          made_visible_by_name?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           tramite_id?: string | null
+          visible_to_client?: boolean | null
         }
         Update: {
           activity_id?: string | null
@@ -217,9 +314,12 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          made_visible_by?: string | null
+          made_visible_by_name?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           tramite_id?: string | null
+          visible_to_client?: boolean | null
         }
         Relationships: [
           {
@@ -264,6 +364,13 @@ export type Database = {
             referencedRelation: "actividades"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "actividades_avances_soportes_made_visible_by_fkey"
+            columns: ["made_visible_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       actividades_dependencies: {
@@ -302,6 +409,105 @@ export type Database = {
           },
         ]
       }
+      actividades_observations: {
+        Row: {
+          client_activity_id: string | null
+          close: boolean | null
+          close_by_id: string | null
+          close_date: string | null
+          created_at: string
+          id: string
+          observation_text: string | null
+          register_by: string | null
+          register_by_name: string | null
+        }
+        Insert: {
+          client_activity_id?: string | null
+          close?: boolean | null
+          close_by_id?: string | null
+          close_date?: string | null
+          created_at?: string
+          id?: string
+          observation_text?: string | null
+          register_by?: string | null
+          register_by_name?: string | null
+        }
+        Update: {
+          client_activity_id?: string | null
+          close?: boolean | null
+          close_by_id?: string | null
+          close_date?: string | null
+          created_at?: string
+          id?: string
+          observation_text?: string | null
+          register_by?: string | null
+          register_by_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actividades_observations_client_activity_id_fkey"
+            columns: ["client_activity_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_observations_close_by_id_fkey"
+            columns: ["close_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_observations_register_by_fkey"
+            columns: ["register_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      actividades_tramites_movimientos: {
+        Row: {
+          activity_id: string | null
+          created_at: string
+          historic_data: boolean | null
+          id: string
+          initial_entry: boolean | null
+          isLast: boolean | null
+          tramite_date: string | null
+          tramite_number: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string
+          historic_data?: boolean | null
+          id?: string
+          initial_entry?: boolean | null
+          isLast?: boolean | null
+          tramite_date?: string | null
+          tramite_number?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string
+          historic_data?: boolean | null
+          id?: string
+          initial_entry?: boolean | null
+          isLast?: boolean | null
+          tramite_date?: string | null
+          tramite_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actividades_tramites_movimientos_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "actividades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caja_chica_liq_client: {
         Row: {
           bill_support: string | null
@@ -311,8 +517,11 @@ export type Database = {
           created_at: string
           id: string
           max_payment_day: string | null
+          name_bill_support: string | null
+          name_payment_support: string | null
           payment_support: string | null
           pdf_url: string | null
+          test: boolean | null
           user_id_liquidator: string
           value: number
         }
@@ -324,8 +533,11 @@ export type Database = {
           created_at?: string
           id?: string
           max_payment_day?: string | null
+          name_bill_support?: string | null
+          name_payment_support?: string | null
           payment_support?: string | null
           pdf_url?: string | null
+          test?: boolean | null
           user_id_liquidator: string
           value: number
         }
@@ -337,8 +549,11 @@ export type Database = {
           created_at?: string
           id?: string
           max_payment_day?: string | null
+          name_bill_support?: string | null
+          name_payment_support?: string | null
           payment_support?: string | null
           pdf_url?: string | null
+          test?: boolean | null
           user_id_liquidator?: string
           value?: number
         }
@@ -378,6 +593,7 @@ export type Database = {
           payment_support: string | null
           pdf_url: string | null
           refund: number
+          test: boolean | null
           user_id: string | null
           user_id_liquidator: string
         }
@@ -392,6 +608,7 @@ export type Database = {
           payment_support?: string | null
           pdf_url?: string | null
           refund?: number
+          test?: boolean | null
           user_id?: string | null
           user_id_liquidator: string
         }
@@ -406,6 +623,7 @@ export type Database = {
           payment_support?: string | null
           pdf_url?: string | null
           refund?: number
+          test?: boolean | null
           user_id?: string | null
           user_id_liquidator?: string
         }
@@ -477,8 +695,11 @@ export type Database = {
           id: string
           internal_liquidation: boolean
           internal_liquidation_id: string | null
+          notif_email_pre: boolean
+          notif_push_pre: boolean
           register_by_email: string
           register_by_id: string
+          test: boolean | null
           value: number
         }
         Insert: {
@@ -492,8 +713,11 @@ export type Database = {
           id?: string
           internal_liquidation?: boolean
           internal_liquidation_id?: string | null
+          notif_email_pre?: boolean
+          notif_push_pre?: boolean
           register_by_email: string
           register_by_id?: string
+          test?: boolean | null
           value: number
         }
         Update: {
@@ -507,8 +731,11 @@ export type Database = {
           id?: string
           internal_liquidation?: boolean
           internal_liquidation_id?: string | null
+          notif_email_pre?: boolean
+          notif_push_pre?: boolean
           register_by_email?: string
           register_by_id?: string
+          test?: boolean | null
           value?: number
         }
         Relationships: [
@@ -555,6 +782,7 @@ export type Database = {
           created_at: string
           id: string
           pending_liquidation: number | null
+          test: boolean | null
           user_id: string | null
         }
         Insert: {
@@ -562,6 +790,7 @@ export type Database = {
           created_at?: string
           id?: string
           pending_liquidation?: number | null
+          test?: boolean | null
           user_id?: string | null
         }
         Update: {
@@ -569,6 +798,7 @@ export type Database = {
           created_at?: string
           id?: string
           pending_liquidation?: number | null
+          test?: boolean | null
           user_id?: string | null
         }
         Relationships: [
@@ -587,36 +817,42 @@ export type Database = {
           caso_id: string
           client_id: string
           created_at: string
+          enable: boolean | null
           file_name: string
           file_type: string
           file_url: string
           id: string
           register_by_email: string
           register_by_id: string
+          visible_to_client: boolean | null
         }
         Insert: {
           caja_chica_id: string
           caso_id: string
           client_id: string
           created_at?: string
+          enable?: boolean | null
           file_name: string
           file_type: string
           file_url: string
           id?: string
           register_by_email: string
           register_by_id?: string
+          visible_to_client?: boolean | null
         }
         Update: {
           caja_chica_id?: string
           caso_id?: string
           client_id?: string
           created_at?: string
+          enable?: boolean | null
           file_name?: string
           file_type?: string
           file_url?: string
           id?: string
           register_by_email?: string
           register_by_id?: string
+          visible_to_client?: boolean | null
         }
         Relationships: [
           {
@@ -699,6 +935,7 @@ export type Database = {
           registered_by_email: string | null
           registered_by_id: string | null
           sector: string | null
+          test: boolean | null
         }
         Insert: {
           assigned_to?: string | null
@@ -720,6 +957,7 @@ export type Database = {
           registered_by_email?: string | null
           registered_by_id?: string | null
           sector?: string | null
+          test?: boolean | null
         }
         Update: {
           assigned_to?: string | null
@@ -741,6 +979,7 @@ export type Database = {
           registered_by_email?: string | null
           registered_by_id?: string | null
           sector?: string | null
+          test?: boolean | null
         }
         Relationships: [
           {
@@ -763,14 +1002,21 @@ export type Database = {
         Row: {
           adjustment_percentage: number | null
           adjustment_values: boolean | null
+          archive_reason: string | null
+          archived_by_id: string | null
+          archived_by_name: string | null
           case_name: string | null
+          client_caso_detail: string | null
           client_id: string | null
           close: boolean | null
+          close_comments: string | null
           created_at: string
           end_date_planned: string | null
           end_date_real: string | null
           id: string
+          is_archived: boolean | null
           materia_id: string | null
+          previous_case: boolean | null
           process_id: string | null
           register_by_id: string | null
           registre_by_email: string | null
@@ -778,18 +1024,26 @@ export type Database = {
           star_date: string | null
           start_date_planned: string | null
           termino: number | null
+          test: boolean | null
         }
         Insert: {
           adjustment_percentage?: number | null
           adjustment_values?: boolean | null
+          archive_reason?: string | null
+          archived_by_id?: string | null
+          archived_by_name?: string | null
           case_name?: string | null
+          client_caso_detail?: string | null
           client_id?: string | null
           close?: boolean | null
+          close_comments?: string | null
           created_at?: string
           end_date_planned?: string | null
           end_date_real?: string | null
           id?: string
+          is_archived?: boolean | null
           materia_id?: string | null
+          previous_case?: boolean | null
           process_id?: string | null
           register_by_id?: string | null
           registre_by_email?: string | null
@@ -797,18 +1051,26 @@ export type Database = {
           star_date?: string | null
           start_date_planned?: string | null
           termino?: number | null
+          test?: boolean | null
         }
         Update: {
           adjustment_percentage?: number | null
           adjustment_values?: boolean | null
+          archive_reason?: string | null
+          archived_by_id?: string | null
+          archived_by_name?: string | null
           case_name?: string | null
+          client_caso_detail?: string | null
           client_id?: string | null
           close?: boolean | null
+          close_comments?: string | null
           created_at?: string
           end_date_planned?: string | null
           end_date_real?: string | null
           id?: string
+          is_archived?: boolean | null
           materia_id?: string | null
+          previous_case?: boolean | null
           process_id?: string | null
           register_by_id?: string | null
           registre_by_email?: string | null
@@ -816,6 +1078,7 @@ export type Database = {
           star_date?: string | null
           start_date_planned?: string | null
           termino?: number | null
+          test?: boolean | null
         }
         Relationships: [
           {
@@ -840,6 +1103,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "client_casos_archived_by_id_fkey"
+            columns: ["archived_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "client_casos_materia_id_fkey"
             columns: ["materia_id"]
             isOneToOne: false
@@ -855,10 +1125,111 @@ export type Database = {
           },
         ]
       }
+      client_casos_arcvhive_log: {
+        Row: {
+          archived_by_id: string | null
+          archived_by_name: string | null
+          archived_unarchived: string | null
+          case_id: string | null
+          created_at: string
+          id: string
+        }
+        Insert: {
+          archived_by_id?: string | null
+          archived_by_name?: string | null
+          archived_unarchived?: string | null
+          case_id?: string | null
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          archived_by_id?: string | null
+          archived_by_name?: string | null
+          archived_unarchived?: string | null
+          case_id?: string | null
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_casos_arcvhive_log_archived_by_id_fkey"
+            columns: ["archived_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_casos_arcvhive_log_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_casos_observations: {
+        Row: {
+          case_id: string | null
+          close: boolean | null
+          close_by_id: string | null
+          close_date: string | null
+          created_at: string
+          id: string
+          observation_text: string | null
+          register_by_id: string | null
+          register_by_name: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          close?: boolean | null
+          close_by_id?: string | null
+          close_date?: string | null
+          created_at?: string
+          id?: string
+          observation_text?: string | null
+          register_by_id?: string | null
+          register_by_name?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          close?: boolean | null
+          close_by_id?: string | null
+          close_date?: string | null
+          created_at?: string
+          id?: string
+          observation_text?: string | null
+          register_by_id?: string | null
+          register_by_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_casos_observations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "client_casos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_casos_observations_close_by_id_fkey"
+            columns: ["close_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_casos_observations_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_tramites: {
         Row: {
-          caso_id: string | null
-          client_id: string | null
+          caso_id: string
+          client_id: string
+          client_tramite_detail: string | null
           close: boolean | null
           created_at: string
           department_id: string | null
@@ -866,19 +1237,28 @@ export type Database = {
           end_date_real: string | null
           id: string
           institution_id: string | null
+          is_skip: boolean | null
+          notif_email_post: boolean
+          notif_push_admin_post: boolean
+          notif_push_exp: boolean
+          notif_push_post: boolean
+          notif_push_pre: boolean
           order: number | null
           prev_tramite_id: string | null
+          process_tramite_id: string | null
           register_by_email: string | null
           register_by_id: string | null
-          responsible_id: string | null
+          responsible_id: string
           start_date: string | null
           start_date_planned: string | null
           termino: number | null
+          test: boolean | null
           tramite_name: string | null
         }
         Insert: {
-          caso_id?: string | null
-          client_id?: string | null
+          caso_id: string
+          client_id: string
+          client_tramite_detail?: string | null
           close?: boolean | null
           created_at?: string
           department_id?: string | null
@@ -886,19 +1266,28 @@ export type Database = {
           end_date_real?: string | null
           id?: string
           institution_id?: string | null
+          is_skip?: boolean | null
+          notif_email_post?: boolean
+          notif_push_admin_post?: boolean
+          notif_push_exp?: boolean
+          notif_push_post?: boolean
+          notif_push_pre?: boolean
           order?: number | null
           prev_tramite_id?: string | null
+          process_tramite_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
-          responsible_id?: string | null
+          responsible_id: string
           start_date?: string | null
           start_date_planned?: string | null
           termino?: number | null
+          test?: boolean | null
           tramite_name?: string | null
         }
         Update: {
-          caso_id?: string | null
-          client_id?: string | null
+          caso_id?: string
+          client_id?: string
+          client_tramite_detail?: string | null
           close?: boolean | null
           created_at?: string
           department_id?: string | null
@@ -906,14 +1295,22 @@ export type Database = {
           end_date_real?: string | null
           id?: string
           institution_id?: string | null
+          is_skip?: boolean | null
+          notif_email_post?: boolean
+          notif_push_admin_post?: boolean
+          notif_push_exp?: boolean
+          notif_push_post?: boolean
+          notif_push_pre?: boolean
           order?: number | null
           prev_tramite_id?: string | null
+          process_tramite_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
-          responsible_id?: string | null
+          responsible_id?: string
           start_date?: string | null
           start_date_planned?: string | null
           termino?: number | null
+          test?: boolean | null
           tramite_name?: string | null
         }
         Relationships: [
@@ -922,6 +1319,13 @@ export type Database = {
             columns: ["prev_tramite_id"]
             isOneToOne: false
             referencedRelation: "client_tramites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_tramites_process_tramite_id_fkey"
+            columns: ["process_tramite_id"]
+            isOneToOne: false
+            referencedRelation: "process_tramites"
             referencedColumns: ["id"]
           },
           {
@@ -1032,7 +1436,9 @@ export type Database = {
           file_url: string | null
           habilitantes_name: string | null
           id: string
-          notif_post: boolean | null
+          notif_push_exp: boolean
+          notif_push_post: boolean
+          notif_push_pre: boolean
           register_by_email: string | null
           register_by_id: string | null
         }
@@ -1045,7 +1451,9 @@ export type Database = {
           file_url?: string | null
           habilitantes_name?: string | null
           id?: string
-          notif_post?: boolean | null
+          notif_push_exp?: boolean
+          notif_push_post?: boolean
+          notif_push_pre?: boolean
           register_by_email?: string | null
           register_by_id?: string | null
         }
@@ -1058,7 +1466,9 @@ export type Database = {
           file_url?: string | null
           habilitantes_name?: string | null
           id?: string
-          notif_post?: boolean | null
+          notif_push_exp?: boolean
+          notif_push_post?: boolean
+          notif_push_pre?: boolean
           register_by_email?: string | null
           register_by_id?: string | null
         }
@@ -1151,12 +1561,96 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledgebase_files: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_path: string | null
+          file_type: string | null
+          folder_id: string | null
+          id: string
+          register_by_email: string | null
+          register_by_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          folder_id?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          folder_id?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledgebase_files_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "knowledgebase_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledgebase_files_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledgebase_folders: {
+        Row: {
+          created_at: string
+          folder_name: string | null
+          folder_type: string | null
+          id: string
+          register_by_email: string | null
+          register_by_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          folder_name?: string | null
+          folder_type?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          folder_name?: string | null
+          folder_type?: string | null
+          id?: string
+          register_by_email?: string | null
+          register_by_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledgebase_folders_register_by_id_fkey"
+            columns: ["register_by_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lena_ai_chats: {
         Row: {
           created_at: string
           id: string
           message_received: string | null
           message_sent: string | null
+          rol: string
           thread_id: string | null
           user_id: string | null
         }
@@ -1165,6 +1659,7 @@ export type Database = {
           id?: string
           message_received?: string | null
           message_sent?: string | null
+          rol: string
           thread_id?: string | null
           user_id?: string | null
         }
@@ -1173,6 +1668,7 @@ export type Database = {
           id?: string
           message_received?: string | null
           message_sent?: string | null
+          rol?: string
           thread_id?: string | null
           user_id?: string | null
         }
@@ -1197,22 +1693,28 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          run_id: string | null
           thread_detail: string | null
           thread_id_oai: string | null
+          thread_type: string
           user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          run_id?: string | null
           thread_detail?: string | null
           thread_id_oai?: string | null
+          thread_type: string
           user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          run_id?: string | null
           thread_detail?: string | null
           thread_id_oai?: string | null
+          thread_type?: string
           user_id?: string | null
         }
         Relationships: [
@@ -1406,6 +1908,7 @@ export type Database = {
           materia_id: string | null
           process_detail: string | null
           process_name: string | null
+          test: boolean | null
           tramites_quantity: number | null
         }
         Insert: {
@@ -1417,6 +1920,7 @@ export type Database = {
           materia_id?: string | null
           process_detail?: string | null
           process_name?: string | null
+          test?: boolean | null
           tramites_quantity?: number | null
         }
         Update: {
@@ -1428,6 +1932,7 @@ export type Database = {
           materia_id?: string | null
           process_detail?: string | null
           process_name?: string | null
+          test?: boolean | null
           tramites_quantity?: number | null
         }
         Relationships: [
@@ -1447,11 +1952,12 @@ export type Database = {
           consultant: boolean | null
           created_at: string
           id: string
-          prev_activity_id: string | null
+          prev_actvity_id: string | null
           process_activity_name: string | null
           process_activity_term: number | null
           process_id: string | null
           process_tramite_id: string | null
+          test: boolean | null
         }
         Insert: {
           activity_detail?: string | null
@@ -1459,11 +1965,12 @@ export type Database = {
           consultant?: boolean | null
           created_at?: string
           id?: string
-          prev_activity_id?: string | null
+          prev_actvity_id?: string | null
           process_activity_name?: string | null
           process_activity_term?: number | null
           process_id?: string | null
           process_tramite_id?: string | null
+          test?: boolean | null
         }
         Update: {
           activity_detail?: string | null
@@ -1471,16 +1978,17 @@ export type Database = {
           consultant?: boolean | null
           created_at?: string
           id?: string
-          prev_activity_id?: string | null
+          prev_actvity_id?: string | null
           process_activity_name?: string | null
           process_activity_term?: number | null
           process_id?: string | null
           process_tramite_id?: string | null
+          test?: boolean | null
         }
         Relationships: [
           {
-            foreignKeyName: "process_activities_prev_activity_id_fkey"
-            columns: ["prev_activity_id"]
+            foreignKeyName: "process_activities_prev_actvity_id_fkey"
+            columns: ["prev_actvity_id"]
             isOneToOne: false
             referencedRelation: "process_activities"
             referencedColumns: ["id"]
@@ -1566,6 +2074,7 @@ export type Database = {
           process_id: string | null
           process_tramite_name: string | null
           process_tramite_term: number | null
+          test: boolean | null
           tramite_detail: string | null
           tramite_order: number | null
         }
@@ -1577,6 +2086,7 @@ export type Database = {
           process_id?: string | null
           process_tramite_name?: string | null
           process_tramite_term?: number | null
+          test?: boolean | null
           tramite_detail?: string | null
           tramite_order?: number | null
         }
@@ -1588,6 +2098,7 @@ export type Database = {
           process_id?: string | null
           process_tramite_name?: string | null
           process_tramite_term?: number | null
+          test?: boolean | null
           tramite_detail?: string | null
           tramite_order?: number | null
         }
@@ -1672,6 +2183,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reassignment_log: {
+        Row: {
+          created_at: string
+          hierarchy_id: string | null
+          hierarchy_type: string | null
+          id: string
+          new_responsable_id: string | null
+          previous_responsable_id: string | null
+          reassignment_reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          hierarchy_id?: string | null
+          hierarchy_type?: string | null
+          id?: string
+          new_responsable_id?: string | null
+          previous_responsable_id?: string | null
+          reassignment_reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          hierarchy_id?: string | null
+          hierarchy_type?: string | null
+          id?: string
+          new_responsable_id?: string | null
+          previous_responsable_id?: string | null
+          reassignment_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reassignment_log_new_responsable_id_fkey"
+            columns: ["new_responsable_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reassignment_log_previous_responsable_id_fkey"
+            columns: ["previous_responsable_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reg_facturable: {
         Row: {
           activity: string | null
@@ -1684,13 +2240,17 @@ export type Database = {
           duration_real: number | null
           duration_to_bill: number | null
           end_date_time: string | null
+          end_date_to_bill: string | null
           hour_value: number | null
           id: string
           is_liquidated: boolean
+          notif_email_pre: boolean
+          notif_push_pre: boolean
           reg_facturable_liq_id: string | null
           register_by_email: string | null
           register_by_id: string | null
           start_date_time: string | null
+          test: boolean | null
           total_value: number | null
           tramite_id: string | null
           value_pre_adjusrment: number | null
@@ -1706,13 +2266,17 @@ export type Database = {
           duration_real?: number | null
           duration_to_bill?: number | null
           end_date_time?: string | null
+          end_date_to_bill?: string | null
           hour_value?: number | null
           id?: string
           is_liquidated?: boolean
+          notif_email_pre?: boolean
+          notif_push_pre?: boolean
           reg_facturable_liq_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           start_date_time?: string | null
+          test?: boolean | null
           total_value?: number | null
           tramite_id?: string | null
           value_pre_adjusrment?: number | null
@@ -1728,13 +2292,17 @@ export type Database = {
           duration_real?: number | null
           duration_to_bill?: number | null
           end_date_time?: string | null
+          end_date_to_bill?: string | null
           hour_value?: number | null
           id?: string
           is_liquidated?: boolean
+          notif_email_pre?: boolean
+          notif_push_pre?: boolean
           reg_facturable_liq_id?: string | null
           register_by_email?: string | null
           register_by_id?: string | null
           start_date_time?: string | null
+          test?: boolean | null
           total_value?: number | null
           tramite_id?: string | null
           value_pre_adjusrment?: number | null
@@ -1797,9 +2365,13 @@ export type Database = {
           internal_liquidation_path: string | null
           internal_liquidation_url: string | null
           liq_code: string | null
+          max_payment_day: string | null
+          name_bill_support: string | null
+          name_payment_support: string | null
           payment_support: string | null
           pdf_url: string | null
           pdf_url_cliente: string | null
+          test: boolean | null
           user_id_liquidator: string | null
           value_total: number | null
         }
@@ -1815,9 +2387,13 @@ export type Database = {
           internal_liquidation_path?: string | null
           internal_liquidation_url?: string | null
           liq_code?: string | null
+          max_payment_day?: string | null
+          name_bill_support?: string | null
+          name_payment_support?: string | null
           payment_support?: string | null
           pdf_url?: string | null
           pdf_url_cliente?: string | null
+          test?: boolean | null
           user_id_liquidator?: string | null
           value_total?: number | null
         }
@@ -1833,9 +2409,13 @@ export type Database = {
           internal_liquidation_path?: string | null
           internal_liquidation_url?: string | null
           liq_code?: string | null
+          max_payment_day?: string | null
+          name_bill_support?: string | null
+          name_payment_support?: string | null
           payment_support?: string | null
           pdf_url?: string | null
           pdf_url_cliente?: string | null
+          test?: boolean | null
           user_id_liquidator?: string | null
           value_total?: number | null
         }
@@ -1863,9 +2443,70 @@ export type Database = {
           },
         ]
       }
+      tutorials_categories: {
+        Row: {
+          category_name: string | null
+          created_at: string
+          id: string
+          order: number | null
+        }
+        Insert: {
+          category_name?: string | null
+          created_at?: string
+          id?: string
+          order?: number | null
+        }
+        Update: {
+          category_name?: string | null
+          created_at?: string
+          id?: string
+          order?: number | null
+        }
+        Relationships: []
+      }
+      tutorials_content: {
+        Row: {
+          category_id: string | null
+          content_detail: string | null
+          content_name: string | null
+          created_at: string
+          id: string
+          order: number | null
+          video_url: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          content_detail?: string | null
+          content_name?: string | null
+          created_at?: string
+          id?: string
+          order?: number | null
+          video_url?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          content_detail?: string | null
+          content_name?: string | null
+          created_at?: string
+          id?: string
+          order?: number | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorials_content_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           category: string | null
+          client_id: string | null
+          color_hex_code: string | null
           company_id: string | null
           consultant: boolean | null
           created_at: string
@@ -1885,11 +2526,14 @@ export type Database = {
           register_by_id: string | null
           rol_name: string | null
           surnames: string | null
+          test: boolean | null
           title: string | null
           tokenReset: string | null
         }
         Insert: {
           category?: string | null
+          client_id?: string | null
+          color_hex_code?: string | null
           company_id?: string | null
           consultant?: boolean | null
           created_at?: string
@@ -1909,11 +2553,14 @@ export type Database = {
           register_by_id?: string | null
           rol_name?: string | null
           surnames?: string | null
+          test?: boolean | null
           title?: string | null
           tokenReset?: string | null
         }
         Update: {
           category?: string | null
+          client_id?: string | null
+          color_hex_code?: string | null
           company_id?: string | null
           consultant?: boolean | null
           created_at?: string
@@ -1933,22 +2580,23 @@ export type Database = {
           register_by_id?: string | null
           rol_name?: string | null
           surnames?: string | null
+          test?: boolean | null
           title?: string | null
           tokenReset?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "users_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "users_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "users_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -1984,6 +2632,7 @@ export type Database = {
           register_by_email: string | null
           register_by_id: string | null
           responsible_id: string | null
+          test: boolean | null
           tramite_id: string | null
         }
         Insert: {
@@ -2002,6 +2651,7 @@ export type Database = {
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
+          test?: boolean | null
           tramite_id?: string | null
         }
         Update: {
@@ -2020,6 +2670,7 @@ export type Database = {
           register_by_email?: string | null
           register_by_id?: string | null
           responsible_id?: string | null
+          test?: boolean | null
           tramite_id?: string | null
         }
         Relationships: [
@@ -2156,4 +2807,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
