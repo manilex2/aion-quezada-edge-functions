@@ -209,6 +209,9 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
         }
       })
     }
+    let notifPushCounterTotal = 0;
+    let notifPushCounterOK = 0;
+    let notifPushCounterFail = 0;
 
     // Definir las fechas
     const today = startOfDay(new Date());
@@ -246,10 +249,13 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               notification_title: "Actividad Por Vencer",
               notification_text: `Su actividad asignada '${actividad.activity_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
             });
+          notifPushCounterTotal++;
           if (pushDataError) {
             console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
+            notifPushCounterFail++;
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de prevencimiento de la actividad: ${actividad.activity_name} fue enviada correctamente`);
           const { error: notifActividadError } = await supabase
             .from('actividades')
@@ -294,10 +300,13 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               notification_title: "Actividad Por Vencer",
               notification_text: `Su actividad asignada '${actividad.activity_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
+          notifPushCounterTotal++;
           if (pushDataError) {
             console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
+            notifPushCounterFail++;
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de vencimiento de la actividad: ${actividad.activity_name} fue enviada correctamente`);
           const { error: notifActividadError } = await supabase
             .from('actividades')
@@ -349,10 +358,13 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
               notification_title: "Actividad Vencida",
               notification_text: `Su actividad asignada '${actividad.activity_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
             })
+          notifPushCounterTotal++;
           if (pushDataError) {
             console.error("Error al guardar la notificacion push de la actividad:", pushDataError);
+            notifPushCounterFail++;
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de postvencimiento de la actividad: ${actividad.activity_name} fue enviada correctamente`);
           const { error: notifActividadError } = await supabase
             .from('actividades')
@@ -369,9 +381,13 @@ app.get('/notifications/actividades', cors(corsOptions), async (req: express.Req
         }
       }
     }
-
-    console.log("Notificaciones push de actividades enviadas correctamente.");
-    res.status(201).send({ message: "Notificaciones push de actividades enviadas correctamente." });
+    if (notifPushCounterTotal == 0) {
+      console.log('No hay notificaciones push pendientes para actividades.');
+      res.status(201).send({ message: "No hay notificaciones push pendientes para actividades." });
+    } else {
+      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de actividades exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      res.status(201).send({ message: `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de actividades exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.` })
+    }
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
@@ -441,6 +457,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       })
     }
 
+    let notifPushCounterTotal = 0;
+    let notifPushCounterOK = 0;
+    let notifPushCounterFail = 0;
+    let notifEmailCounterTotal = 0;
+    let notifEmailCounterOK = 0;
+    let notifEmailCounterFail = 0;
+
     // Definir las fechas
     const today = startOfDay(new Date());
 
@@ -477,10 +500,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               notification_title: "Trámite Por Vencer",
               notification_text: `Su trámite asignado '${tramite.tramite_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
             })
+          notifPushCounterTotal++;
           if (pushDataError) {
             console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+            notifPushCounterFail++;
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de prevencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
           const { error: notifTramiteError } = await supabase
             .from('client_tramites')
@@ -525,10 +551,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               notification_title: "Trámite Por Vencer",
               notification_text: `Su trámite asignado ${tramite.tramite_name} vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
+          notifPushCounterTotal++;
           if (pushDataError) {
+            notifPushCounterFail++;
             console.error("Error al guardar la notificacion push del trámite:", pushDataError);
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de vencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
           const { error: notifTramiteError } = await supabase
             .from('client_tramites')
@@ -631,8 +660,10 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
           };
           try {
             if (tramite.notif_email_post == false) {
+              notifEmailCounterTotal++;
               const info = await transporter.sendMail(mailOptions);
               console.log("Correo enviado exitosamente:", info);
+              notifEmailCounterOK++;
               const { error: notifTramiteError } = await supabase
                 .from('client_tramites')
                 .update({
@@ -646,6 +677,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             }
           } catch (error) {
             console.error("Error al enviar el correo:", error);
+            notifEmailCounterFail++;
             continue;
           }
           if (tramite.notif_push_post == false) {
@@ -661,10 +693,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                 notification_title: "Trámite Vencido",
                 notification_text: `Su trámite asignado ${tramite.tramite_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
               });
+            notifPushCounterTotal++;
             if (pushDataError) {
+              notifPushCounterFail++;
               console.error("Error al guardar la notificacion push del trámite:", pushDataError);
               continue;
             }
+            notifPushCounterOK++;
             console.log(`Notificación Push de postvencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
             const { error: notifTramiteError } = await supabase
               .from('client_tramites')
@@ -691,10 +726,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                   notification_title: "Trámite Vencido",
                   notification_text: `El trámite ${tramite.tramite_name} asignado a ${userData.display_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
                 })
+              notifPushCounterTotal++;
               if (pushDataError) {
+                notifPushCounterFail++;
                 console.error("Error al guardar la notificacion push del trámite:", pushDataError);
                 continue;
               }
+              notifPushCounterOK++;
               console.log(`Notificación Push de postvencimiento del tramite: ${tramite.tramite_name} para el admin ${admin.display_name} fue enviada correctamente`);
             }
             const { error: notifTramiteError } = await supabase
@@ -715,8 +753,25 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       }
     }
 
-    console.log("Notificaciones push de trámites enviadas correctamente.");
-    res.status(201).send({ message: "Notificaciones push de trámites enviadas correctamente." });
+    let message: string;
+
+    if (notifPushCounterTotal == 0) {
+      console.log('No hay notificaciones push pendientes para trámites.');
+      message = 'No hay notificaciones push pendientes para trámites ';
+    } else {
+      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+    }
+
+    if (notifEmailCounterTotal == 0) {
+      console.log('No hay notificaciones email pendientes para trámites.');
+      message = 'y no hay notificaciones email pendientes para trámites.';
+    } else {
+      console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message = `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+    }
+
+    res.status(201).send({ message });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
@@ -785,6 +840,13 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
         }
       })
     }
+
+    let notifPushCounterTotal = 0;
+    let notifPushCounterOK = 0;
+    let notifPushCounterFail = 0;
+    let notifEmailCounterTotal = 0;
+    let notifEmailCounterOK = 0;
+    let notifEmailCounterFail = 0;
 
     // Definir las fechas
     const today = startOfDay(new Date());
@@ -862,8 +924,10 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
           };
           try {
             if (cajaChica.notif_email_pre == false) {
+              notifEmailCounterTotal++;
               const info = await transporter.sendMail(mailOptions);
               console.log("Correo enviado exitosamente:", info);
+              notifEmailCounterOK++;
               const { error: notifCajaChicaError } = await supabase
                 .from('caja_chica_registros')
                 .update({
@@ -876,6 +940,7 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
               }
             }
           } catch (error) {
+            notifEmailCounterFail++;
             console.error("Error al enviar el correo:", error);
             continue;
           }
@@ -893,10 +958,13 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
                   notification_title: "Caja Chica Sin Liquidar",
                   notification_text: `La caja chica por concepto de ${cajaChica.concept} de ${fechaFormateada} aún no ha sido liquidada. Le recomendamos tomar las acciones pertinentes.`
                 })
+              notifPushCounterTotal++;
               if (pushDataError) {
+                notifPushCounterFail++;
                 console.error("Error al guardar la notificacion push del registro de caja chica:", pushDataError);
                 continue;
               }
+              notifPushCounterOK++;
               console.log(`Notificación Push de 10 días de antelación de caja chica: ${cajaChica.concept} al supervisor ${supervisor.display_name} fue enviada correctamente`);
             }
             const { error: notifCajaChicaError } = await supabase
@@ -916,8 +984,24 @@ app.get('/notifications/cajachica', cors(corsOptions), async (req: express.Reque
       }
     }
 
-    console.log("Notificaciones push de caja chica enviadas correctamente.");
-    res.status(201).send({ message: "Notificaciones push de caja chica enviadas correctamente." });
+    let message: string;
+
+    if (notifPushCounterTotal == 0) {
+      console.log('No hay notificaciones push pendientes para caja chica.');
+      message = 'No hay notificaciones push pendientes para caja chica ';
+    } else {
+      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de caja chica exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de caja chica exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+    }
+
+    if (notifEmailCounterTotal == 0) {
+      console.log('No hay notificaciones email pendientes para caja chica.');
+      message = 'y no hay notificaciones email pendientes para caja chica.';
+    } else {
+      console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message = `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de caja chica exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+    }
+    res.status(201).send({ message });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
@@ -986,6 +1070,13 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
         }
       })
     }
+
+    let notifPushCounterTotal = 0;
+    let notifPushCounterOK = 0;
+    let notifPushCounterFail = 0;
+    let notifEmailCounterTotal = 0;
+    let notifEmailCounterOK = 0;
+    let notifEmailCounterFail = 0;
 
     // Definir las fechas
     const today = startOfDay(new Date());
@@ -1063,8 +1154,10 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
           };
           try {
             if (registroFacturable.notif_email_pre == false) {
+              notifEmailCounterTotal++;
               const info = await transporter.sendMail(mailOptions);
               console.log("Correo enviado exitosamente:", info);
+              notifEmailCounterOK++;
               const { error: notifRegFacturableError } = await supabase
                 .from('reg_facturable')
                 .update({
@@ -1077,6 +1170,7 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
               }
             }
           } catch (error) {
+            notifEmailCounterFail++;
             console.error("Error al enviar el correo:", error);
             continue;
           }
@@ -1094,10 +1188,13 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
                   notification_title: "Registro Facturable Sin Liquidar",
                   notification_text: `El registro facturable por concepto de ${registroFacturable.activity} de ${fechaFormateada} aún no ha sido liquidado. Le recomendamos tomar las acciones pertinentes.`
                 })
+              notifPushCounterTotal++;
               if (pushDataError) {
+                notifPushCounterFail++;
                 console.error("Error al guardar la notificacion push del registro facturable:", pushDataError);
                 continue;
               }
+              notifPushCounterOK++;
               console.log(`Notificación Push de 10 días de antelación de registro facturable: ${registroFacturable.activity} al supervisor ${supervisor.display_name} fue enviada correctamente`);
             }
             const { error: notifRegFacturableError } = await supabase
@@ -1117,8 +1214,24 @@ app.get('/notifications/factura', cors(corsOptions), async (req: express.Request
       }
     }
 
-    console.log("Notificaciones push de registros facturables enviadas correctamente.");
-    res.status(201).send({ message: "Notificaciones push de registros facturables enviadas correctamente." });
+    let message: string;
+
+    if (notifPushCounterTotal == 0) {
+      console.log('No hay notificaciones push pendientes para registros facturables.');
+      message = 'No hay notificaciones push pendientes para registros facturables ';
+    } else {
+      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de registros facturables exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de registros facturables exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+    }
+
+    if (notifEmailCounterTotal == 0) {
+      console.log('No hay notificaciones email pendientes para registros facturables.');
+      message = 'y no hay notificaciones email pendientes para registros facturables.';
+    } else {
+      console.log(`${notifEmailCounterOK == 0? 'No hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message = `${notifEmailCounterOK == 0? 'y no hubo': `y hubo ${notifEmailCounterOK}`} notificaciones email de registros facturables exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+    }
+    res.status(201).send({ message });
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
@@ -1188,6 +1301,10 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       })
     }
 
+    let notifPushCounterTotal = 0;
+    let notifPushCounterOK = 0;
+    let notifPushCounterFail = 0;
+
     // Definir las fechas
     const today = startOfDay(new Date());
 
@@ -1232,10 +1349,13 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               notification_title: "Habilitante Por Vencer",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
             })
+          notifPushCounterTotal++;
           if (pushDataError) {
+            notifPushCounterFail++;
             console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de prevencimiento de la habilitante: ${habilitante.habilitantes_name} fue enviada correctamente`);
           const { error: notifHabilitanteError } = await supabase
             .from('habilitantes')
@@ -1280,10 +1400,13 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               notification_title: "Habilitante Por Vencer",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
+            notifPushCounterTotal++;
           if (pushDataError) {
+            notifPushCounterFail++;
             console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de vencimiento de la habilitante: ${habilitante.habilitantes_name} fue enviada correctamente`);
           const { error: notifHabilitanteError } = await supabase
             .from('habilitantes')
@@ -1335,10 +1458,13 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
               notification_title: "Habilitante Vencida",
               notification_text: `Su habilitante asignada '${habilitante.habilitantes_name}' venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
             })
+          notifPushCounterTotal++;
           if (pushDataError) {
+            notifPushCounterFail++;
             console.error("Error al guardar la notificacion push de la habilitante:", pushDataError);
             continue;
           }
+          notifPushCounterOK++;
           console.log(`Notificación Push de posvencimiento de la habilitante: ${habilitante.habilitantes_name} fue enviada correctamente`);
           const { error: notifHabilitanteError } = await supabase
             .from('habilitantes')
@@ -1356,8 +1482,13 @@ app.get('/notifications/habilitantes', cors(corsOptions), async (req: express.Re
       }
     }
 
-    console.log("Notificaciones push de habilitantes enviadas correctamente.");
-    res.status(201).send({ message: "Notificaciones push de habilitantes enviadas correctamente." });
+    if (notifPushCounterTotal == 0) {
+      console.log('No hay notificaciones push pendientes para habilitantes.');
+      res.status(201).send({ message: "No hay notificaciones push pendientes para habilitantes." });
+    } else {
+      console.log(`${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de habilitantes exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      res.status(201).send({ message: `${notifPushCounterOK == 0? 'No hubo': `Hubo ${notifPushCounterOK}`} notificaciones push de habilitantes exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.` })
+    }
   } catch (error) {
     const errorJSON = JSON.stringify(error);
     if (typeof error === "string") {
