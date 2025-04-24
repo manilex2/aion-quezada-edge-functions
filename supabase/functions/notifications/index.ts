@@ -483,9 +483,9 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       .lt("end_date_planned", day2Before.toISOString());
 
     if (tramitesAntesDataError) {
-      console.error("Error al obtener los trámites:", tramitesAntesDataError);
+      console.error("Error al obtener los pasos:", tramitesAntesDataError);
     } else {
-      console.log("Trámites del día anterior:", tramitesAntesData);
+      console.log("Pasos del día anterior:", tramitesAntesData);
       for (const tramite of tramitesAntesData) {
         try {
           const { error: pushDataError } = await supabase
@@ -497,17 +497,17 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               read: false,
               user_id: tramite.responsible_id,
               related_id: tramite.id,
-              notification_title: "Trámite Por Vencer",
-              notification_text: `Su trámite asignado '${tramite.tramite_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
+              notification_title: "Paso Por Vencer",
+              notification_text: `Su paso asignado '${tramite.tramite_name}' vence mañana. Le recomendamos tomar las acciones pertinentes.`
             })
           notifPushCounterTotal++;
           if (pushDataError) {
-            console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+            console.error("Error al guardar la notificacion push del paso:", pushDataError);
             notifPushCounterFail++;
             continue;
           }
           notifPushCounterOK++;
-          console.log(`Notificación Push de prevencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
+          console.log(`Notificación Push de prevencimiento del paso: ${tramite.tramite_name} fue enviada correctamente`);
           const { error: notifTramiteError } = await supabase
             .from('client_tramites')
             .update({
@@ -515,7 +515,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             })
             .eq('id', tramite.id);
           if (notifTramiteError) {
-            console.error("Error al actualizar el estatus de la Notificación Push de prevencimiento del tramite:", notifTramiteError);
+            console.error("Error al actualizar el estatus de la Notificación Push de prevencimiento del paso:", notifTramiteError);
             continue;
           }
         } catch (error) {
@@ -524,7 +524,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       }
     }
 
-    // Consulta a Supabase para obtener trámites del día actual
+    // Consulta a Supabase para obtener pasos del día actual
     const { data: tramitesActualData, error: tramitesActualDataError } = await supabase
       .from('client_tramites')
       .select('*')
@@ -534,9 +534,9 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       .lt("end_date_planned", dayBefore.toISOString());
 
     if (tramitesActualDataError) {
-      console.error("Error al obtener los trámites:", tramitesActualDataError);
+      console.error("Error al obtener los pasos:", tramitesActualDataError);
     } else {
-      console.log("Trámites del día actual:", tramitesActualData);
+      console.log("Pasos del día actual:", tramitesActualData);
       for (const tramite of tramitesActualData) {
         try {
           const { error: pushDataError } = await supabase
@@ -548,17 +548,17 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               read: false,
               user_id: tramite.responsible_id,
               related_id: tramite.id,
-              notification_title: "Trámite Por Vencer",
-              notification_text: `Su trámite asignado ${tramite.tramite_name} vence hoy. Le recomendamos tomar las acciones pertinentes.`
+              notification_title: "Paso Por Vencer",
+              notification_text: `Su paso asignado ${tramite.tramite_name} vence hoy. Le recomendamos tomar las acciones pertinentes.`
             })
           notifPushCounterTotal++;
           if (pushDataError) {
             notifPushCounterFail++;
-            console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+            console.error("Error al guardar la notificacion push del paso:", pushDataError);
             continue;
           }
           notifPushCounterOK++;
-          console.log(`Notificación Push de vencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
+          console.log(`Notificación Push de vencimiento del paso: ${tramite.tramite_name} fue enviada correctamente`);
           const { error: notifTramiteError } = await supabase
             .from('client_tramites')
             .update({
@@ -566,7 +566,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             })
             .eq('id', tramite.id);
           if (notifTramiteError) {
-            console.error("Error al actualizar el estatus de la Notificación Push de vencimiento del tramite:", notifTramiteError);
+            console.error("Error al actualizar el estatus de la Notificación Push de vencimiento del paso:", notifTramiteError);
             continue;
           }
         } catch (error) {
@@ -584,9 +584,9 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
       .lt("end_date_planned", today.toISOString());
 
     if (tramitesDespuesDataError) {
-      console.error("Error al obtener los trámites:", tramitesDespuesDataError);
+      console.error("Error al obtener los pasos:", tramitesDespuesDataError);
     } else {
-      console.log("Trámites del día después:", tramitesDespuesData);
+      console.log("Pasos del día después:", tramitesDespuesData);
       const transporter = nodemailer.createTransport({
         host: Deno.env.get("SENDGRID_HOST"),
         port: Deno.env.get("SENDGRID_PORT"),
@@ -611,7 +611,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             .eq('id', tramite.responsible_id!)
             .single();
           if (userDataError) {
-            console.error("Error el usuario para enviar el email del trámite:", userDataError);
+            console.error("Error el usuario para enviar el email del paso:", userDataError);
             continue;
           }
           const { data: adminData, error: adminDataError } = await supabase
@@ -619,13 +619,13 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             .select('id, email, display_name')
             .eq('rol_name', 'Administrador')
           if (adminDataError) {
-            console.error("Error al obtener los administradores para enviar el email del trámite:", adminDataError);
+            console.error("Error al obtener los administradores para enviar el email del paso:", adminDataError);
             continue;
           }
 
           // Asegurarse de que adminData no sea null y sea un arreglo
           if (!adminData || !Array.isArray(adminData)) {
-            console.error("No se encontraron administradores para enviar el email del trámite.");
+            console.error("No se encontraron administradores para enviar el email del paso.");
             continue;
           }
 
@@ -651,8 +651,8 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
             bcc: adminEmails.join(', '), // Enviar a los administradores en BCC
             subject: `Trámite Vencido`,
             html: `
-              <h2>TRÁMITE VENCIDO</h2>
-              <p>El trámite <strong>${tramite.tramite_name}</strong> asignado al usuario <strong>${userData.display_name}</strong> venció el <strong>${fechaFormateada}</strong>. Le recomendamos tomar las acciones pertinentes.</p>
+              <h2>PASO VENCIDO</h2>
+              <p>El paso <strong>${tramite.tramite_name}</strong> asignado al usuario <strong>${userData.display_name}</strong> venció el <strong>${fechaFormateada}</strong>. Le recomendamos tomar las acciones pertinentes.</p>
               <p>Muchas gracias</p>
               <p>Atentamente,</p>
               <p><b>El equipo de ${Deno.env.get("AION_NAME")}</b></p>
@@ -671,7 +671,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                 })
                 .eq('id', tramite.id);
               if (notifTramiteError) {
-                console.error("Error al actualizar el estatus de la Notificación Email de posvencimiento del tramite:", notifTramiteError);
+                console.error("Error al actualizar el estatus de la Notificación Email de posvencimiento del paso:", notifTramiteError);
                 continue;
               }
             }
@@ -690,17 +690,17 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                 read: false,
                 user_id: tramite.responsible_id,
                 related_id: tramite.id,
-                notification_title: "Trámite Vencido",
-                notification_text: `Su trámite asignado ${tramite.tramite_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
+                notification_title: "Paso Vencido",
+                notification_text: `Su paso asignado ${tramite.tramite_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
               });
             notifPushCounterTotal++;
             if (pushDataError) {
               notifPushCounterFail++;
-              console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+              console.error("Error al guardar la notificacion push del paso:", pushDataError);
               continue;
             }
             notifPushCounterOK++;
-            console.log(`Notificación Push de postvencimiento del tramite: ${tramite.tramite_name} fue enviada correctamente`);
+            console.log(`Notificación Push de postvencimiento del paso: ${tramite.tramite_name} fue enviada correctamente`);
             const { error: notifTramiteError } = await supabase
               .from('client_tramites')
               .update({
@@ -708,7 +708,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               })
               .eq('id', tramite.id);
             if (notifTramiteError) {
-              console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento del tramite:", notifTramiteError);
+              console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento del paso:", notifTramiteError);
               continue;
             }
           }
@@ -723,17 +723,17 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
                   read: false,
                   user_id: admin.id,
                   related_id: tramite.id,
-                  notification_title: "Trámite Vencido",
-                  notification_text: `El trámite ${tramite.tramite_name} asignado a ${userData.display_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
+                  notification_title: "Paso Vencido",
+                  notification_text: `El Paso ${tramite.tramite_name} asignado a ${userData.display_name} venció el ${fechaFormateada}. Le recomendamos tomar las acciones pertinentes.`
                 })
               notifPushCounterTotal++;
               if (pushDataError) {
                 notifPushCounterFail++;
-                console.error("Error al guardar la notificacion push del trámite:", pushDataError);
+                console.error("Error al guardar la notificacion push del paso:", pushDataError);
                 continue;
               }
               notifPushCounterOK++;
-              console.log(`Notificación Push de postvencimiento del tramite: ${tramite.tramite_name} para el admin ${admin.display_name} fue enviada correctamente`);
+              console.log(`Notificación Push de postvencimiento del paso: ${tramite.tramite_name} para el admin ${admin.display_name} fue enviada correctamente`);
             }
             const { error: notifTramiteError } = await supabase
               .from('client_tramites')
@@ -742,7 +742,7 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
               })
               .eq('id', tramite.id);
             if (notifTramiteError) {
-              console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento de Admin del tramite:", notifTramiteError);
+              console.error("Error al actualizar el estatus de la Notificación Push de posvencimiento de Admin del paso:", notifTramiteError);
               continue;
             }
           }
@@ -756,19 +756,19 @@ app.get('/notifications/tramites', cors(corsOptions), async (req: express.Reques
     let message: string;
 
     if (notifPushCounterTotal == 0) {
-      console.log('No hay notificaciones push pendientes para trámites.');
-      message = 'No hay notificaciones push pendientes para trámites ';
+      console.log('No hay notificaciones push pendientes para pasos.');
+      message = 'No hay notificaciones push pendientes para pasos ';
     } else {
-      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
-      message = `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de trámites exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
+      console.log(`De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de pasos exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas.`);
+      message = `De ${notifPushCounterTotal} notificaciones push totales, ${notifPushCounterOK == 0? 'no hubo': `hubo ${notifPushCounterOK}`} notificaciones de pasos exitosas y ${notifPushCounterFail == 0 ? 'ningunas' : notifPushCounterFail} fallidas `;
     }
 
     if (notifEmailCounterTotal == 0) {
-      console.log('No hay notificaciones email pendientes para trámites.');
-      message += 'y no hay notificaciones email pendientes para trámites.';
+      console.log('No hay notificaciones email pendientes para pasos.');
+      message += 'y no hay notificaciones email pendientes para pasos.';
     } else {
-      console.log(`De ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
-      message += `y de ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de trámites exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
+      console.log(`De ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de pasos exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`);
+      message += `y de ${notifEmailCounterTotal} notificaciones email totales, ${notifEmailCounterOK == 0? 'no hubo': `hubo ${notifEmailCounterOK}`} notificaciones de pasos exitosas y ${notifEmailCounterFail == 0 ? 'ningunas' : notifEmailCounterFail} fallidas.`;
     }
 
     res.status(201).send({ message });
